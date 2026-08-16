@@ -1,0 +1,22 @@
+{
+  "name": "tcu-mipymes-guanacaste",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Directorio de MIPYMES productoras de alimentos en Guanacaste - Proyecto TCU, UCR",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4",
+    "vue-router": "^4.3",
+    "@supabase/supabase-js": "^2.45",
+    "@vueuse/core": "^10.11"
+  },
+  "devDependencies": {
+    "vite": "^5.4",
+    "@vitejs/plugin-vue": "^5.1"
+  }
+}
