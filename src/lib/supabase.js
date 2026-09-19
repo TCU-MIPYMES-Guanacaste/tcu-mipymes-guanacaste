@@ -1,58 +1,37 @@
 /**
  * Cliente de Supabase y funciones auxiliares.
  *
- * Este módulo inicializa la conexión con Supabase usando las variables
- * de entorno de Vite y exporta utilidades compartidas por toda la app.
+ * Inicializa la conexión con Supabase usando las variables de entorno
+ * de Vite. Si faltan, lanza un error claro en vez de seguir con un
+ * cliente roto (que solo produciría una pantalla en blanco).
  */
 import { createClient } from '@supabase/supabase-js'
 
-// Variables de entorno inyectadas por Vite en tiempo de compilación
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Validar que las variables de entorno estén configuradas
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
-    '[Supabase] Las variables VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY son requeridas. ' +
-    'Consulta el archivo .env.example para más información.'
+  throw new Error(
+    '[Supabase] Faltan las variables VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY. ' +
+    'Copie el archivo .env.example a .env y complete los valores de su proyecto.'
   )
 }
 
-// Instancia del cliente de Supabase (singleton)
+/** Nombre del bucket público de imágenes en Supabase Storage. */
+export const BUCKET_IMAGENES = 'product-images'
+
+/** Instancia única del cliente de Supabase. */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 /**
- * Obtiene la URL pública de una imagen almacenada en el bucket 'product-images'.
+ * Obtiene la URL pública de una imagen almacenada en el bucket de imágenes.
  *
- * @param {string} path - Ruta relativa del archivo dentro del bucket
- * @returns {string} URL pública de la imagen
+ * @param {string} path - Ruta relativa dentro del bucket (ej: 'productores/123.webp')
+ * @returns {string} URL pública, o '' si no hay ruta
  */
 export function getPublicImageUrl(path) {
   if (!path) return ''
 
-  const { data } = supabase.storage
-    .from('product-images')
-    .getPublicUrl(path)
-
+  const { data } = supabase.storage.from(BUCKET_IMAGENES).getPublicUrl(path)
   return data?.publicUrl ?? ''
-}
-
-/**
- * Genera un enlace de WhatsApp (wa.me) con un mensaje predefinido en español.
- *
- * @param {string} phone - Número de teléfono con código de país (ej: '50688881234')
- * @param {string} producerName - Nombre del negocio/productor
- * @returns {string} URL completa de WhatsApp lista para abrir
- */
-export function generateWhatsAppLink(phone, producerName) {
-  // Limpiar el número de teléfono (remover espacios, guiones, paréntesis)
-  const cleanPhone = phone.replace(/[\s\-()]/g, '')
-
-  // Mensaje predefinido para el contacto inicial
-  const message = encodeURIComponent(
-    `Hola, encontré su negocio ${producerName} en el Directorio MIPYMES Guanacaste ` +
-    `y me gustaría consultar sobre sus productos.`
-  )
-
-  return `https://wa.me/${cleanPhone}?text=${message}`
 }
