@@ -10,7 +10,6 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
-import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ProducerTable from '@/components/admin/ProducerTable.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
@@ -40,50 +39,33 @@ async function handleDelete(id) {
 </script>
 
 <template>
-  <div class="admin-layout">
-    <!-- Barra lateral de navegación -->
-    <AdminSidebar />
+  <div class="dashboard-view">
+    <header class="admin-header">
+      <h1 class="admin-title">Panel de Administración</h1>
+      <RouterLink to="/admin/productores/nuevo" class="btn-create">
+        ➕ Nuevo Productor
+      </RouterLink>
+    </header>
 
-    <!-- Contenido principal del dashboard -->
-    <div class="admin-content">
-      <header class="admin-header">
-        <h1 class="admin-title">Panel de Administración</h1>
-        <RouterLink to="/admin/productores/nuevo" class="btn-create">
-          ➕ Nuevo Productor
-        </RouterLink>
-      </header>
+    <!-- Indicador de carga -->
+    <LoadingSpinner v-if="loading" message="Cargando productores..." />
 
-      <!-- Indicador de carga -->
-      <LoadingSpinner v-if="loading" message="Cargando productores..." />
-
-      <!-- Error -->
-      <div v-else-if="error" class="error-message">
-        <p>⚠️ {{ error }}</p>
-      </div>
-
-      <!-- Tabla de productores -->
-      <ProducerTable
-        v-else
-        :productores="productores"
-        @edit="handleEdit"
-        @delete="handleDelete"
-      />
+    <!-- Error -->
+    <div v-else-if="error" class="error-message">
+      <p>⚠️ {{ error }}</p>
     </div>
+
+    <!-- Tabla de productores -->
+    <ProducerTable
+      v-else
+      :productores="productores"
+      @edit="handleEdit"
+      @delete="handleDelete"
+    />
   </div>
 </template>
 
 <style scoped>
-.admin-layout {
-  display: flex;
-  min-height: calc(100vh - 200px);
-  margin: -1.5rem;
-}
-
-.admin-content {
-  flex: 1;
-  padding: 2rem;
-}
-
 .admin-header {
   display: flex;
   align-items: center;
