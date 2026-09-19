@@ -352,7 +352,7 @@ function contactosDe(id) {
 
 .contactos-count {
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary);
   white-space: nowrap;
 }
 </style>

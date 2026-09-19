@@ -9,6 +9,10 @@ describe('sanitizarBusqueda', () => {
     expect(sanitizarBusqueda('a_b')).toBe('a b')
   })
 
+  it('elimina el asterisco', () => {
+    expect(sanitizarBusqueda('que*so')).toBe('que so')
+  })
+
   it('colapsa espacios múltiples y recorta extremos', () => {
     expect(sanitizarBusqueda('  queso    fresco  ')).toBe('queso fresco')
   })

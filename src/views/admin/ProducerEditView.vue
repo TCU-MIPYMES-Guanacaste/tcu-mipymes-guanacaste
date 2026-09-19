@@ -65,7 +65,7 @@ function handleCancel() {
     <LoadingSpinner v-if="loading && !producerData" message="Cargando datos del productor..." />
 
     <!-- Error -->
-    <div v-else-if="error" class="error-message">
+    <div v-else-if="error && !producerData" class="error-message">
       <p>⚠️ {{ error }}</p>
     </div>
 

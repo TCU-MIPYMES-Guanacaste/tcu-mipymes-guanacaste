@@ -95,7 +95,7 @@ async function handleDelete(id) {
     <LoadingSpinner v-if="loading" message="Cargando productores..." />
 
     <!-- Error -->
-    <div v-else-if="error" class="error-message">
+    <div v-else-if="error && productores.length === 0" class="error-message">
       <p>⚠️ {{ error }}</p>
     </div>
 

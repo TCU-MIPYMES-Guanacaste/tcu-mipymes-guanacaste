@@ -113,11 +113,9 @@ export function useProductores() {
     const resultado = await ejecutar(async () => {
       const onlyActive = filters.onlyActive !== undefined ? filters.onlyActive : true
 
-      // Filtro de categoría: Opción B (dos consultas). El spike de Opción A
-      // (una sola consulta con !inner) no pudo ejecutarse porque el proyecto
-      // de Supabase real está inaccesible.
-      let query = supabase.from('productores').select(SELECT_PRODUCTOR)
-
+      // Filtro por categoría en dos consultas: primero los ids de la tabla puente y luego
+      // los productores. Es más simple de leer y mantener que un embed anidado con !inner.
+      let idsPorCategoria = null
       if (filters.categoria_id) {
         const { data: relaciones, error: catError } = await supabase
           .from('productor_categorias')
@@ -125,9 +123,14 @@ export function useProductores() {
           .eq('categoria_id', filters.categoria_id)
         if (catError) throw catError
 
-        const ids = relaciones?.map((r) => r.productor_id) ?? []
-        if (ids.length === 0) return []
-        query = query.in('id', ids)
+        idsPorCategoria = relaciones?.map((r) => r.productor_id) ?? []
+        if (idsPorCategoria.length === 0) return []
+      }
+
+      let query = supabase.from('productores').select(SELECT_PRODUCTOR)
+
+      if (idsPorCategoria) {
+        query = query.in('id', idsPorCategoria)
       }
 
       if (onlyActive) {
