@@ -130,6 +130,7 @@
   --color-text:          var(--text-primary);
   --color-text-muted:    var(--text-secondary);
   --color-text-light:    var(--color-neutral-100);
+  --color-error-light:   #fef2f2;
 }
 
 /* ---- Estilos Base ---- */
