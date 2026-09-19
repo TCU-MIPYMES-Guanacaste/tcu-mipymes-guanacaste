@@ -41,6 +41,20 @@ describe('useStorage', () => {
       expect(ruta.endsWith('.jpg')).toBe(true)
     })
 
+    it('usa la extensión del tipo MIME aunque el nombre no tenga punto', async () => {
+      const archivo = new File(['x'], 'IMG1234', { type: 'image/jpeg' })
+      const { uploadImage } = useStorage()
+      const ruta = await uploadImage(archivo)
+      expect(ruta.endsWith('.jpg')).toBe(true)
+    })
+
+    it('cae a "bin" si el tipo es desconocido y el nombre no tiene extensión', async () => {
+      const archivo = new File(['x'], 'archivo', { type: 'application/octet-stream' })
+      const { uploadImage } = useStorage()
+      const ruta = await uploadImage(archivo)
+      expect(ruta.endsWith('.bin')).toBe(true)
+    })
+
     it('lanza el error de Supabase si la subida falla', async () => {
       mockRef.actual.storage.upload.mockResolvedValueOnce({ data: null, error: new Error('cuota excedida') })
       const { uploadImage } = useStorage()

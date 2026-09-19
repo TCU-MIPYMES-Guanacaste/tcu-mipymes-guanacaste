@@ -8,6 +8,24 @@ import { supabase, BUCKET_IMAGENES } from '@/lib/supabase'
 
 const CARPETA_PRODUCTORES = 'productores'
 
+// Extensión por tipo MIME; el nombre del archivo no es confiable (puede no tener punto)
+const EXTENSION_POR_TIPO = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+}
+
+/**
+ * Devuelve la extensión a usar para un archivo: por su tipo MIME si es
+ * conocido; si no, la del nombre (en minúsculas) o 'bin' si no tiene.
+ */
+function extensionDesdeTipo(file) {
+  const porTipo = EXTENSION_POR_TIPO[file.type]
+  if (porTipo) return porTipo
+  const partes = file.name.split('.')
+  return partes.length > 1 ? partes.pop().toLowerCase() : 'bin'
+}
+
 export function useStorage() {
   /**
    * Sube una imagen con un nombre único y devuelve su ruta relativa.
@@ -17,7 +35,7 @@ export function useStorage() {
    * @throws Error de Supabase si la subida falla
    */
   async function uploadImage(file) {
-    const extension = (file.name.split('.').pop() || 'webp').toLowerCase()
+    const extension = extensionDesdeTipo(file)
     const nombreUnico = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`
     const ruta = `${CARPETA_PRODUCTORES}/${nombreUnico}`
 
