@@ -11,27 +11,29 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
 import { useCatalogos } from '@/composables/useCatalogos'
+import { useToast } from '@/composables/useToast'
 import ProducerForm from '@/components/admin/ProducerForm.vue'
 
 const router = useRouter()
-const { createProductor, loading } = useProductores()
+const { createProductor, loading, error } = useProductores()
 const { cantones, categorias, fetchCantones, fetchCategorias } = useCatalogos()
+const { mostrarExito, mostrarError } = useToast()
 
-// Cargar catálogos al montar
 onMounted(async () => {
   await Promise.all([fetchCantones(), fetchCategorias()])
 })
 
-/** Manejar el envío del formulario de creación */
+/** Guardar el nuevo productor (la foto se sube dentro de createProductor) */
 async function handleSubmit(formData) {
-  const result = await createProductor(formData)
-  if (result) {
-    // Redirigir al dashboard después de crear exitosamente
+  const creado = await createProductor(formData)
+  if (creado) {
+    mostrarExito(`Productor "${creado.nombre_negocio}" registrado.`)
     router.push({ name: 'admin-dashboard' })
+  } else {
+    mostrarError(error.value || 'No se pudo registrar el productor.')
   }
 }
 
-/** Cancelar la creación y volver al dashboard */
 function handleCancel() {
   router.push({ name: 'admin-dashboard' })
 }

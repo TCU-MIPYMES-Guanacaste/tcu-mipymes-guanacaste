@@ -11,6 +11,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
 import { useCatalogos } from '@/composables/useCatalogos'
+import { useToast } from '@/composables/useToast'
 import ProducerForm from '@/components/admin/ProducerForm.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
@@ -18,11 +19,11 @@ const route = useRoute()
 const router = useRouter()
 const { fetchProductorById, updateProductor, loading, error } = useProductores()
 const { cantones, categorias, fetchCantones, fetchCategorias } = useCatalogos()
+const { mostrarExito, mostrarError } = useToast()
 
-// Datos actuales del productor para precargar en el formulario
+// Datos actuales del productor para precargar el formulario
 const producerData = ref(null)
 
-// Cargar datos del productor y catálogos al montar
 onMounted(async () => {
   const [producer] = await Promise.all([
     fetchProductorById(route.params.id),
@@ -33,21 +34,22 @@ onMounted(async () => {
   if (producer) {
     producerData.value = producer
   } else {
-    // Si no se encontró, redirigir al dashboard
+    mostrarError('No se encontró el productor.')
     router.push({ name: 'admin-dashboard' })
   }
 })
 
-/** Manejar el envío del formulario de edición */
+/** Guardar cambios (sube foto nueva y borra la anterior dentro de updateProductor) */
 async function handleSubmit(formData) {
-  const result = await updateProductor(route.params.id, formData)
-  if (result) {
-    // Redirigir al dashboard después de actualizar exitosamente
+  const actualizado = await updateProductor(route.params.id, formData)
+  if (actualizado) {
+    mostrarExito('Cambios guardados.')
     router.push({ name: 'admin-dashboard' })
+  } else {
+    mostrarError(error.value || 'No se pudieron guardar los cambios.')
   }
 }
 
-/** Cancelar la edición y volver al dashboard */
 function handleCancel() {
   router.push({ name: 'admin-dashboard' })
 }

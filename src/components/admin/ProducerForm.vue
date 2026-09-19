@@ -2,21 +2,22 @@
   ProducerForm.vue - Formulario completo para crear/editar productores.
 -->
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { reactive, watch } from 'vue'
+import { esTelefonoValido } from '@/utils/telefono'
 import ImageUploader from './ImageUploader.vue'
 
 const props = defineProps({
-  /** Datos iniciales del productor (para edición, opcional) */
+  /** Datos iniciales del productor (modo edición) */
   initialData: {
     type: Object,
     default: null,
   },
-  /** Lista de cantones para el selector */
+  /** Cantones para el selector */
   cantones: {
     type: Array,
     default: () => [],
   },
-  /** Lista de categorías para los checkboxes */
+  /** Categorías para los checkboxes */
   categorias: {
     type: Array,
     default: () => [],
@@ -30,7 +31,7 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// Estado del Formulario
+// Estado del formulario
 const form = reactive({
   nombre_negocio: '',
   nombre_contacto: '',
@@ -42,9 +43,10 @@ const form = reactive({
   foto_url: '',
   activo: true,
   categoria_ids: [],
+  fotoFile: null,   // imagen nueva pendiente de subir (se sube al guardar)
 })
 
-// Estado de Validación
+// Mensajes de validación
 const errors = reactive({
   nombre_negocio: '',
   nombre_contacto: '',
@@ -53,100 +55,88 @@ const errors = reactive({
   categorias: '',
 })
 
-// Observar datos iniciales para edición
+// Precargar datos en modo edición
 watch(
   () => props.initialData,
-  (newData) => {
-    if (newData) {
-      form.nombre_negocio = newData.nombre_negocio || ''
-      form.nombre_contacto = newData.nombre_contacto || ''
-      form.telefono = newData.telefono || ''
-      form.email = newData.email || ''
-      form.descripcion = newData.descripcion || ''
-      form.canton_id = newData.canton_id || ''
-      form.direccion_detalle = newData.direccion_detalle || ''
-      form.foto_url = newData.foto_url || ''
-      form.activo = newData.activo !== undefined ? newData.activo : true
-      
-      if (newData.categorias) {
-        form.categoria_ids = newData.categorias
-          .map((c) => c.categoria?.id || c.categoria_id)
-          .filter(Boolean)
-      } else {
-        form.categoria_ids = []
-      }
-    }
+  (datos) => {
+    if (!datos) return
+    form.nombre_negocio = datos.nombre_negocio || ''
+    form.nombre_contacto = datos.nombre_contacto || ''
+    form.telefono = datos.telefono || ''
+    form.email = datos.email || ''
+    form.descripcion = datos.descripcion || ''
+    form.canton_id = datos.canton_id || ''
+    form.direccion_detalle = datos.direccion_detalle || ''
+    form.foto_url = datos.foto_url || ''
+    form.activo = datos.activo !== undefined ? datos.activo : true
+    form.categoria_ids = (datos.categorias ?? [])
+      .map((c) => c.categoria?.id || c.categoria_id)
+      .filter(Boolean)
+    form.fotoFile = null
   },
   { immediate: true }
 )
 
-// Manejo de la subida de imagen
-function handleImageUploaded(path) {
-  form.foto_url = path
+// --- Imagen ---
+function handleArchivoSeleccionado(archivo) {
+  form.fotoFile = archivo
 }
 
-// Alternar categorías checked
+function handleQuitarImagen() {
+  form.fotoFile = null
+  form.foto_url = ''
+}
+
+// --- Categorías ---
 function toggleCategoria(id) {
-  const index = form.categoria_ids.indexOf(id)
-  if (index === -1) {
+  const indice = form.categoria_ids.indexOf(id)
+  if (indice === -1) {
     form.categoria_ids.push(id)
   } else {
-    form.categoria_ids.splice(index, 1)
+    form.categoria_ids.splice(indice, 1)
   }
 }
 
-// Validar formulario
+// --- Validación ---
 function validateForm() {
-  let isValid = true
-  
-  // Limpiar errores
-  errors.nombre_negocio = ''
-  errors.nombre_contacto = ''
-  errors.telefono = ''
-  errors.canton_id = ''
-  errors.categorias = ''
+  let valido = true
+
+  for (const clave of Object.keys(errors)) errors[clave] = ''
 
   if (!form.nombre_negocio.trim()) {
     errors.nombre_negocio = 'El nombre del negocio es obligatorio.'
-    isValid = false
+    valido = false
   }
 
   if (!form.nombre_contacto.trim()) {
     errors.nombre_contacto = 'El nombre de contacto es obligatorio.'
-    isValid = false
+    valido = false
   }
 
   if (!form.telefono.trim()) {
     errors.telefono = 'El teléfono es obligatorio.'
-    isValid = false
-  } else {
-    // Validar teléfono básico (Costa Rica suele usar 8 dígitos)
-    const cleanPhone = form.telefono.replace(/[\s\-()]/g, '')
-    if (cleanPhone.length < 8) {
-      errors.telefono = 'Ingrese un número telefónico válido (mínimo 8 dígitos).'
-      isValid = false
-    }
+    valido = false
+  } else if (!esTelefonoValido(form.telefono)) {
+    errors.telefono = 'Ingrese un número de 8 dígitos (ej: 8888-4444).'
+    valido = false
   }
 
   if (!form.canton_id) {
     errors.canton_id = 'Debe seleccionar un cantón.'
-    isValid = false
+    valido = false
   }
 
   if (form.categoria_ids.length === 0) {
     errors.categorias = 'Debe seleccionar al menos una categoría de alimentos.'
-    isValid = false
+    valido = false
   }
 
-  return isValid
+  return valido
 }
 
-// Enviar formulario
 function onSubmit() {
   if (!validateForm()) return
-  
-  // Enviar los datos reactivos clonados
-  emit('submit', { ...form })
+  emit('submit', { ...form, categoria_ids: [...form.categoria_ids] })
 }
 </script>
 
@@ -201,7 +191,7 @@ function onSubmit() {
               id="telefono"
               v-model="form.telefono"
               type="tel"
-              placeholder="Ej: 8888 4444"
+              placeholder="Ej: 8888-4444"
               :class="{ 'input-error': errors.telefono }"
             />
             <span v-if="errors.telefono" class="error-msg">{{ errors.telefono }}</span>
@@ -256,7 +246,8 @@ function onSubmit() {
         <div class="form-group">
           <ImageUploader
             :current-image-path="form.foto_url"
-            @uploaded="handleImageUploaded"
+            @archivo-seleccionado="handleArchivoSeleccionado"
+            @quitar="handleQuitarImagen"
           />
         </div>
 
