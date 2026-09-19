@@ -4,7 +4,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { getPublicImageUrl } from '@/lib/supabase'
-import { useProductores } from '@/composables/useProductores'
+import { useStorage } from '@/composables/useStorage'
 
 const props = defineProps({
   /** Ruta de la imagen actual (si existe, para modo edición) */
@@ -16,7 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(['uploaded'])
 
-const { uploadImage } = useProductores()
+const { uploadImage } = useStorage()
 
 // Estado
 const previewUrl = ref('')
