@@ -1,11 +1,18 @@
 <!--
   Componente raíz de la aplicación.
-  Contiene la estructura principal: encabezado, contenido dinámico (RouterView) y pie de página.
+  Estructura: encabezado, contenido dinámico (RouterView), pie de página y toasts.
 -->
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import AppFooter from '@/components/common/AppFooter.vue'
 import AppToast from '@/components/common/AppToast.vue'
+
+const route = useRoute()
+
+// Las rutas admin ocupan todo el ancho (sin el contenedor centrado)
+const anchoCompleto = computed(() => route.matched.some((r) => r.meta?.fullWidth))
 </script>
 
 <template>
@@ -14,7 +21,7 @@ import AppToast from '@/components/common/AppToast.vue'
     <AppHeader />
 
     <!-- Contenido principal: cambia según la ruta activa -->
-    <main class="main-content">
+    <main :class="['main-content', { 'main-content--full': anchoCompleto }]">
       <RouterView />
     </main>
 
@@ -39,5 +46,10 @@ import AppToast from '@/components/common/AppToast.vue'
   max-width: 1280px;
   margin: 0 auto;
   padding: 1.5rem;
+}
+
+.main-content--full {
+  max-width: none;
+  padding: 0;
 }
 </style>

@@ -1,21 +1,22 @@
 /**
  * Configuración del enrutador de la aplicación.
  *
- * Define las rutas públicas, de autenticación y de administración.
- * Incluye un guardia de navegación global para proteger las rutas admin.
+ * Rutas públicas, de autenticación y de administración. Las rutas admin
+ * cuelgan de AdminLayout y heredan `requiresAuth` del padre.
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import { supabase } from '@/lib/supabase'
+import { guardiaAutenticacion } from './guard'
 
-// Importación diferida (lazy loading) de vistas para optimizar la carga inicial
+// Carga diferida de vistas para optimizar la carga inicial
 const HomeView = () => import('@/views/HomeView.vue')
 const ProducerDetailView = () => import('@/views/ProducerDetailView.vue')
 const LoginView = () => import('@/views/LoginView.vue')
+const ResetPasswordView = () => import('@/views/ResetPasswordView.vue')
+const AdminLayout = () => import('@/layouts/AdminLayout.vue')
 const AdminDashboardView = () => import('@/views/admin/AdminDashboardView.vue')
 const ProducerCreateView = () => import('@/views/admin/ProducerCreateView.vue')
 const ProducerEditView = () => import('@/views/admin/ProducerEditView.vue')
 
-// Definición de rutas
 const routes = [
   // --- Rutas públicas ---
   {
@@ -28,96 +29,61 @@ const routes = [
     path: '/productor/:id',
     name: 'producer-detail',
     component: ProducerDetailView,
-    meta: { title: 'Detalle del Productor' },
     props: true,
+    meta: { title: 'Detalle del Productor' },
   },
 
-  // --- Ruta de autenticación (oculta en la navegación) ---
+  // --- Autenticación ---
   {
     path: '/login',
     name: 'login',
     component: LoginView,
     meta: { title: 'Iniciar Sesión - Admin' },
   },
+  {
+    path: '/restablecer-contrasena',
+    name: 'reset-password',
+    component: ResetPasswordView,
+    meta: { title: 'Restablecer Contraseña' },
+  },
 
-  // --- Rutas de administración (requieren autenticación) ---
+  // --- Administración (requiere sesión; el meta del padre protege a los hijos) ---
   {
     path: '/admin',
-    name: 'admin-dashboard',
-    component: AdminDashboardView,
-    meta: {
-      title: 'Panel de Administración',
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/admin/productores/nuevo',
-    name: 'producer-create',
-    component: ProducerCreateView,
-    meta: {
-      title: 'Nuevo Productor',
-      requiresAuth: true,
-    },
-  },
-  {
-    path: '/admin/productores/:id/editar',
-    name: 'producer-edit',
-    component: ProducerEditView,
-    meta: {
-      title: 'Editar Productor',
-      requiresAuth: true,
-    },
-    props: true,
+    component: AdminLayout,
+    meta: { requiresAuth: true, fullWidth: true },
+    children: [
+      {
+        path: '',
+        name: 'admin-dashboard',
+        component: AdminDashboardView,
+        meta: { title: 'Panel de Administración' },
+      },
+      {
+        path: 'productores/nuevo',
+        name: 'producer-create',
+        component: ProducerCreateView,
+        meta: { title: 'Nuevo Productor' },
+      },
+      {
+        path: 'productores/:id/editar',
+        name: 'producer-edit',
+        component: ProducerEditView,
+        props: true,
+        meta: { title: 'Editar Productor' },
+      },
+    ],
   },
 ]
 
-// Crear instancia del enrutador
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  // Desplazar al inicio de la página en cada navegación
   scrollBehavior(_to, _from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition
-    }
-    return { top: 0 }
+    return savedPosition ?? { top: 0 }
   },
 })
 
-/**
- * Guardia de navegación global.
- *
- * 1. Verifica si la ruta requiere autenticación (meta.requiresAuth)
- * 2. Si la requiere, consulta la sesión activa en Supabase
- * 3. Si no hay sesión, redirige al login
- * 4. Si el usuario ya está autenticado e intenta ir al login, redirige al admin
- */
-router.beforeEach(async (to, _from) => {
-  // Actualizar el título de la página
-  if (to.meta.title) {
-    document.title = to.meta.title
-  }
-
-  // Obtener la sesión actual del usuario
-  const { data: { session } } = await supabase.auth.getSession()
-  const isAuthenticated = !!session
-
-  // Si la ruta requiere autenticación y el usuario no está autenticado
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    // Redirigir al login, guardando la ruta original como query param
-    return {
-      name: 'login',
-      query: { redirect: to.fullPath },
-    }
-  }
-
-  // Si el usuario ya está autenticado e intenta ir al login, redirigir al admin
-  if (to.name === 'login' && isAuthenticated) {
-    return { name: 'admin-dashboard' }
-  }
-
-  // Permitir la navegación
-  return true
-})
+router.beforeEach(guardiaAutenticacion)
 
 export default router

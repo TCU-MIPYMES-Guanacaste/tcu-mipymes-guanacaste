@@ -11,7 +11,6 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
 import { useCatalogos } from '@/composables/useCatalogos'
-import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ProducerForm from '@/components/admin/ProducerForm.vue'
 
 const router = useRouter()
@@ -39,37 +38,23 @@ function handleCancel() {
 </script>
 
 <template>
-  <div class="admin-layout">
-    <!-- Barra lateral de navegación -->
-    <AdminSidebar />
+  <div class="create-view">
+    <header class="admin-header">
+      <h1 class="admin-title">Nuevo Productor</h1>
+    </header>
 
-    <!-- Contenido: formulario de creación -->
-    <div class="admin-content">
-      <header class="admin-header">
-        <h1 class="admin-title">Nuevo Productor</h1>
-      </header>
-
-      <ProducerForm
-        :cantones="cantones"
-        :categorias="categorias"
-        :loading="loading"
-        @submit="handleSubmit"
-        @cancel="handleCancel"
-      />
-    </div>
+    <ProducerForm
+      :cantones="cantones"
+      :categorias="categorias"
+      :loading="loading"
+      @submit="handleSubmit"
+      @cancel="handleCancel"
+    />
   </div>
 </template>
 
 <style scoped>
-.admin-layout {
-  display: flex;
-  min-height: calc(100vh - 200px);
-  margin: -1.5rem;
-}
-
-.admin-content {
-  flex: 1;
-  padding: 2rem;
+.create-view {
   max-width: 800px;
 }
 
