@@ -95,6 +95,11 @@ DROP POLICY IF EXISTS "admin_profiles_escritura_auth"      ON public.admin_profi
 DROP POLICY IF EXISTS "admin_profiles_actualizacion_auth"  ON public.admin_profiles;
 DROP POLICY IF EXISTS "admin_profiles_eliminacion_auth"    ON public.admin_profiles;
 
+DROP POLICY IF EXISTS "admin_profiles_lectura"       ON public.admin_profiles;
+DROP POLICY IF EXISTS "admin_profiles_escritura"     ON public.admin_profiles;
+DROP POLICY IF EXISTS "admin_profiles_actualizacion" ON public.admin_profiles;
+DROP POLICY IF EXISTS "admin_profiles_eliminacion"   ON public.admin_profiles;
+
 CREATE POLICY "admin_profiles_lectura"       ON public.admin_profiles FOR SELECT TO authenticated USING (id = auth.uid() OR public.es_admin());
 CREATE POLICY "admin_profiles_escritura"     ON public.admin_profiles FOR INSERT TO authenticated WITH CHECK (public.es_admin());
 CREATE POLICY "admin_profiles_actualizacion" ON public.admin_profiles FOR UPDATE TO authenticated USING (public.es_admin()) WITH CHECK (public.es_admin());
@@ -193,8 +198,9 @@ SET telefono = CASE
     THEN '506' || regexp_replace(telefono, '\D', '', 'g')
   ELSE regexp_replace(telefono, '\D', '', 'g')
 END
-WHERE telefono IS NOT NULL;
--- Idempotente: un número ya normalizado (11 dígitos) cae en ELSE y queda igual.
+WHERE telefono ~ '\D' OR telefono ~ '^\d{8}$';
+-- Idempotente: solo toca filas con caracteres no numéricos o con 8 dígitos;
+-- un número ya normalizado (11 dígitos) no cumple ninguna condición y no se reescribe.
 
 
 -- ============================================================================
