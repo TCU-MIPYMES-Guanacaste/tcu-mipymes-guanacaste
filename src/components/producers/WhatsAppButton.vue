@@ -11,7 +11,7 @@
 -->
 <script setup>
 import { computed } from 'vue'
-import { generateWhatsAppLink } from '@/lib/supabase'
+import { generarEnlaceWhatsApp } from '@/utils/whatsapp'
 
 const props = defineProps({
   /** Número de teléfono con código de país (ej: '50688881234') */
@@ -28,7 +28,7 @@ const props = defineProps({
 
 // Generar el enlace de WhatsApp con el mensaje predefinido
 const whatsappUrl = computed(() => {
-  return generateWhatsAppLink(props.phone, props.producerName)
+  return generarEnlaceWhatsApp(props.phone, props.producerName)
 })
 </script>
 
