@@ -5,6 +5,7 @@
 <script setup>
 import AppHeader from '@/components/common/AppHeader.vue'
 import AppFooter from '@/components/common/AppFooter.vue'
+import AppToast from '@/components/common/AppToast.vue'
 </script>
 
 <template>
@@ -19,6 +20,9 @@ import AppFooter from '@/components/common/AppFooter.vue'
 
     <!-- Pie de página con créditos -->
     <AppFooter />
+
+    <!-- Notificaciones globales -->
+    <AppToast />
   </div>
 </template>
 
