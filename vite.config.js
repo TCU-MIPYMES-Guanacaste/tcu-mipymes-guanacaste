@@ -12,4 +12,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // Configuración de Vitest (pruebas unitarias)
+  test: {
+    environment: 'jsdom',
+    include: ['tests/**/*.test.js'],
+    clearMocks: true,
+  },
 })
