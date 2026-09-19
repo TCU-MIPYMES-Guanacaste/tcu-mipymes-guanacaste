@@ -98,6 +98,28 @@ describe('useProductores', () => {
       expect(error.value).toBe('boom')
       expect(productores.value).toEqual([])
     })
+
+    it('filtra por categoría consultando la tabla puente y luego los ids', async () => {
+      mockRef.actual.responder('productor_categorias', { data: [{ productor_id: 'a' }, { productor_id: 'b' }], error: null })
+      mockRef.actual.responder('productores', { data: [{ id: 'a' }, { id: 'b' }], error: null })
+      const { fetchProductores, productores } = useProductores()
+      await fetchProductores({ categoria_id: 'cat-1' })
+
+      const [puente] = mockRef.actual.consultasDe('productor_categorias')
+      expect(puente.eq).toHaveBeenCalledWith('categoria_id', 'cat-1')
+      const [consulta] = mockRef.actual.consultasDe('productores')
+      expect(consulta.in).toHaveBeenCalledWith('id', ['a', 'b'])
+      expect(productores.value).toEqual([{ id: 'a' }, { id: 'b' }])
+    })
+
+    it('si ningún productor tiene la categoría, devuelve vacío sin consultar productores', async () => {
+      mockRef.actual.responder('productor_categorias', { data: [], error: null })
+      const { fetchProductores, productores } = useProductores()
+      await fetchProductores({ categoria_id: 'cat-x' })
+
+      expect(mockRef.actual.consultasDe('productores')).toHaveLength(0)
+      expect(productores.value).toEqual([])
+    })
   })
 
   describe('createProductor', () => {

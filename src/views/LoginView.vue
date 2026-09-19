@@ -26,7 +26,11 @@ const recuperacionEnviada = ref(false)
 async function handleLogin() {
   try {
     await login(email.value, password.value)
-    router.push(route.query.redirect || '/admin')
+    // Solo rutas internas: evita redirecciones a otros sitios
+    const destino = typeof route.query.redirect === 'string' && /^\/(?!\/)/.test(route.query.redirect)
+      ? route.query.redirect
+      : '/admin'
+    router.push(destino)
   } catch (err) {
     // El mensaje ya quedó en `error`
     console.error('[LoginView] Error en login:', err)

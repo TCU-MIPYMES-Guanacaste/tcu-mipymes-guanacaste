@@ -62,6 +62,30 @@ Solo se hace **una vez** por proyecto.
 9. **Project Settings → API** → copie **Project URL** y **anon public** key.
    Los necesitará en los pasos 4 y 5.
 
+### Proyecto existente (ya tiene la migración 001)
+
+Si el proyecto de Supabase ya estaba funcionando con la Fase 1:
+
+1. Ejecute **solo** `database/migrations/002_seguridad_admin_y_contactos.sql`
+   en el SQL Editor. Es seguro ejecutarla más de una vez.
+2. Las políticas de Storage creadas a mano desde el panel (Storage → Policies)
+   **no** se eliminan automáticamente y dejarían escribir a cualquier usuario
+   autenticado. Revíselas con:
+
+   ```sql
+   SELECT policyname, cmd FROM pg_policies
+   WHERE schemaname = 'storage' AND tablename = 'objects';
+   ```
+
+   Deben quedar únicamente las cuatro que empiezan por `imagenes_`. Elimine
+   cualquier otra desde Storage → Policies o con
+   `DROP POLICY "nombre" ON storage.objects;`.
+3. Complete los pasos 7, 8 y la sección 3 (crear el administrador).
+
+> **Orden importante:** ejecute la migración 002 **antes** de fusionar el código
+> nuevo a la rama `main`, porque cada `push` a `main` publica el sitio
+> automáticamente y el código nuevo espera que la migración ya esté aplicada.
+
 ## 3. Crear el primer administrador
 
 Los administradores se crean a mano (no hay registro público) y deben estar
@@ -181,6 +205,11 @@ LEFT JOIN public.cantones c ON c.id = p.canton_id
 ORDER BY r.total DESC;
 ```
 
+> **Nota:** eliminar un productor borra también su historial de contactos
+> (`ON DELETE CASCADE`), así que los totales históricos bajan. Si el dato
+> importa para un informe, es mejor **ocultarlo** (desmarcar "activo") que
+> eliminarlo.
+
 **Un administrador olvidó su contraseña:** en la pantalla de inicio de sesión
 hay un enlace "¿Olvidó su contraseña?" que envía un correo de recuperación.
 Si prefiere hacerlo a mano: **Authentication → Users → (usuario) → Reset
@@ -224,7 +253,7 @@ Haga **Redeploy**.
 **El botón de WhatsApp no aparece en un productor.**
 Su teléfono no es válido (no tiene 8 dígitos). Edítelo desde el panel.
 
-**El sitio dice "Error al obtener los productores".**
+**El sitio muestra un mensaje de error al cargar los productores.**
 El proyecto de Supabase está pausado (sección 7) o la clave `anon` cambió.
 
 ## 9. Estructura del código

@@ -171,6 +171,7 @@ COMMENT ON FUNCTION public.registrar_contacto(uuid) IS
 
 -- ---- 4.3 Vista de resumen para el panel admin ----
 -- security_invoker hace que la vista respete el RLS de la tabla: solo admins ven datos.
+-- security_invoker requiere PostgreSQL 15 o superior (todo proyecto Supabase reciente lo cumple).
 CREATE OR REPLACE VIEW public.resumen_contactos_whatsapp
 WITH (security_invoker = true) AS
 SELECT
