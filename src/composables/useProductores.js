@@ -91,7 +91,12 @@ export function useProductores() {
 
   /** Lee solo la ruta de la foto actual de un productor. */
   async function obtenerFotoActual(id) {
-    const { data } = await supabase.from('productores').select('foto_url').eq('id', id).single()
+    const { data, error: selectError } = await supabase
+      .from('productores')
+      .select('foto_url')
+      .eq('id', id)
+      .single()
+    if (selectError) throw selectError
     return data?.foto_url ?? null
   }
 
@@ -207,8 +212,10 @@ export function useProductores() {
       const { campos, categoria_ids, fotoFile } = prepararDatos(data)
       const fotoAnterior = await obtenerFotoActual(id)
 
+      let fotoNueva = null
       if (fotoFile) {
-        campos.foto_url = await uploadImage(fotoFile)
+        fotoNueva = await uploadImage(fotoFile)
+        campos.foto_url = fotoNueva
       }
 
       const { data: actualizado, error: updateError } = await supabase
@@ -217,13 +224,19 @@ export function useProductores() {
         .eq('id', id)
         .select()
         .single()
-      if (updateError) throw updateError
 
-      await guardarCategorias(id, categoria_ids, { reemplazar: true })
+      if (updateError) {
+        // El registro no cambió: la foto nueva quedaría huérfana
+        if (fotoNueva) await deleteImage(fotoNueva)
+        throw updateError
+      }
 
+      // El registro ya apunta a la foto nueva: la anterior sobra
       if (fotoAnterior && fotoAnterior !== campos.foto_url) {
         await deleteImage(fotoAnterior)
       }
+
+      await guardarCategorias(id, categoria_ids, { reemplazar: true })
 
       return actualizado
     }, null)
