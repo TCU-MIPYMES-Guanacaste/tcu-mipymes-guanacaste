@@ -10,6 +10,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
 import { getPublicImageUrl } from '@/lib/supabase'
+import { formatearTelefono } from '@/utils/telefono'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import WhatsAppButton from '@/components/producers/WhatsAppButton.vue'
 
@@ -90,15 +91,16 @@ onMounted(async () => {
               👤 {{ producer.nombre_contacto }}
             </p>
             <p v-if="producer.telefono" class="contact-phone">
-              📞 {{ producer.telefono }}
+              📞 {{ formatearTelefono(producer.telefono) }}
             </p>
           </div>
 
           <!-- Botón de WhatsApp -->
           <WhatsAppButton
             v-if="producer.telefono"
-            :phone="producer.telefono"
-            :producer-name="producer.nombre_negocio"
+            :telefono="producer.telefono"
+            :nombre-negocio="producer.nombre_negocio"
+            :productor-id="producer.id"
           />
         </div>
       </div>

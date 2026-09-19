@@ -1,44 +1,53 @@
 <!--
   WhatsAppButton.vue - Botón de contacto por WhatsApp.
 
-  Genera un enlace directo a WhatsApp (wa.me) con un mensaje predefinido
-  en español para contactar al productor. Se muestra como un botón verde
-  distintivo.
+  Abre wa.me con un mensaje predefinido y registra el clic como métrica
+  (sin bloquear la apertura del enlace).
 
   Props:
-  - phone (String): Número de teléfono con código de país
-  - producerName (String): Nombre del negocio para incluir en el mensaje
+  - telefono (String): teléfono en cualquier formato aceptado por normalizarTelefono
+  - nombreNegocio (String): nombre del negocio para el mensaje
+  - productorId (String): id del productor, para la métrica de contactos
 -->
 <script setup>
 import { computed } from 'vue'
 import { generarEnlaceWhatsApp } from '@/utils/whatsapp'
+import { useContactos } from '@/composables/useContactos'
 
 const props = defineProps({
-  /** Número de teléfono con código de país (ej: '50688881234') */
-  phone: {
+  telefono: {
     type: String,
     required: true,
   },
-  /** Nombre del negocio/productor */
-  producerName: {
+  nombreNegocio: {
     type: String,
     required: true,
+  },
+  productorId: {
+    type: String,
+    default: '',
   },
 })
 
-// Generar el enlace de WhatsApp con el mensaje predefinido
-const whatsappUrl = computed(() => {
-  return generarEnlaceWhatsApp(props.phone, props.producerName)
-})
+const { registrarContacto } = useContactos()
+
+const whatsappUrl = computed(() => generarEnlaceWhatsApp(props.telefono, props.nombreNegocio))
+
+/** El enlace abre en otra pestaña, así que esta llamada termina aunque no se espere. */
+function handleClick() {
+  registrarContacto(props.productorId)
+}
 </script>
 
 <template>
   <a
+    v-if="whatsappUrl"
     :href="whatsappUrl"
     target="_blank"
     rel="noopener noreferrer"
     class="whatsapp-button"
-    :aria-label="`Contactar a ${producerName} por WhatsApp`"
+    :aria-label="`Contactar a ${nombreNegocio} por WhatsApp`"
+    @click="handleClick"
   >
     <!-- Ícono de WhatsApp (SVG inline) -->
     <svg
