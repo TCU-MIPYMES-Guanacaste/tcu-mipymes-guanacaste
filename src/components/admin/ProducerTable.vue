@@ -11,6 +11,11 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  /** Resumen de contactos por productor: Map<id, { total, ultimos_30_dias }> */
+  contactosPorProductor: {
+    type: Map,
+    default: () => new Map(),
+  },
 })
 
 const emit = defineEmits(['edit', 'delete'])
@@ -31,6 +36,11 @@ const filteredProductores = computed(() => {
     return negocio.includes(search) || contacto.includes(search) || canton.includes(search)
   })
 })
+
+/** Total de contactos por WhatsApp de un productor (0 si no tiene) */
+function contactosDe(id) {
+  return props.contactosPorProductor.get(id)?.total ?? 0
+}
 </script>
 
 <template>
@@ -56,6 +66,7 @@ const filteredProductores = computed(() => {
             <th>Ubicación</th>
             <th>Categorías</th>
             <th>Estado</th>
+            <th class="text-right">Contactos</th>
             <th class="text-right">Acciones</th>
           </tr>
         </thead>
@@ -106,6 +117,12 @@ const filteredProductores = computed(() => {
             <td>
               <span :class="['status-badge', p.activo ? 'status-active' : 'status-inactive']">
                 {{ p.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <!-- Contactos por WhatsApp -->
+            <td class="text-right">
+              <span class="contactos-count" :title="'Clics en Contactar por WhatsApp'">
+                💬 {{ contactosDe(p.id) }}
               </span>
             </td>
             <!-- Acciones -->
@@ -331,5 +348,11 @@ const filteredProductores = computed(() => {
 .empty-desc {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
+}
+
+.contactos-count {
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
 }
 </style>
