@@ -200,6 +200,31 @@ describe('useProductores', () => {
         { productor_id: 'p1', categoria_id: 'cat-2' },
       ])
     })
+
+    it('si el update falla después de subir la foto nueva, la borra y no toca la anterior', async () => {
+      mockRef.actual.responder('productores', { data: { foto_url: 'productores/vieja.webp' }, error: null })
+      mockRef.actual.responder('productores', { data: null, error: { message: 'falló' } })
+      const { updateProductor, error } = useProductores()
+      const resultado = await updateProductor('p1', { ...datosBase, fotoFile: new File(['x'], 'n.webp') })
+
+      expect(resultado).toBeNull()
+      expect(error.value).toBe('falló')
+      expect(storageMock.deleteImage).toHaveBeenCalledWith('productores/nueva.webp')
+      expect(storageMock.deleteImage).not.toHaveBeenCalledWith('productores/vieja.webp')
+    })
+
+    it('si fallan las categorías después del update, la foto anterior ya fue borrada', async () => {
+      mockRef.actual.responder('productores', { data: { foto_url: 'productores/vieja.webp' }, error: null })
+      mockRef.actual.responder('productores', { data: { id: 'p1' }, error: null })
+      mockRef.actual.responder('productor_categorias', { data: null, error: { message: 'cat falló' } })
+      const { updateProductor, error } = useProductores()
+      const resultado = await updateProductor('p1', { ...datosBase, fotoFile: new File(['x'], 'n.webp') })
+
+      expect(resultado).toBeNull()
+      expect(error.value).toBe('cat falló')
+      expect(storageMock.deleteImage).toHaveBeenCalledWith('productores/vieja.webp')
+      expect(storageMock.deleteImage).not.toHaveBeenCalledWith('productores/nueva.webp')
+    })
   })
 
   describe('deleteProductor', () => {
