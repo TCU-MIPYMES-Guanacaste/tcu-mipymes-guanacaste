@@ -29,3 +29,7 @@ pnpm-debug.log*
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Configuración local del editor / herramientas de IA
+.claude/
+.superpowers/
