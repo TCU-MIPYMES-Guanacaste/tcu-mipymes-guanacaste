@@ -11,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
 import { getPublicImageUrl } from '@/lib/supabase'
 import { formatearTelefono } from '@/utils/telefono'
+import { colorDeCategoria } from '@/utils/categoriaColor'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import WhatsAppButton from '@/components/producers/WhatsAppButton.vue'
 
@@ -46,6 +47,9 @@ onMounted(async () => {
 
     <!-- Detalle del productor -->
     <article v-else-if="producer" class="detail-content">
+      <!-- Resplandor cálido detrás de la portada (decorativo, sin íconos) -->
+      <div class="detail-glow" aria-hidden="true"></div>
+
       <!-- Enlace para regresar -->
       <RouterLink to="/" class="back-link">← Volver al directorio</RouterLink>
 
@@ -69,12 +73,16 @@ onMounted(async () => {
             📍 {{ producer.canton.nombre }}, Guanacaste
           </p>
 
-          <!-- Categorías -->
+          <!-- Categorías, cada una con su color propio -->
           <div v-if="producer.categorias?.length" class="detail-tags">
             <span
               v-for="cat in producer.categorias"
               :key="cat.categoria?.id"
               class="detail-tag"
+              :style="{
+                background: colorDeCategoria(cat.categoria?.nombre).bg,
+                color: colorDeCategoria(cat.categoria?.nombre).texto,
+              }"
             >
               {{ cat.categoria?.nombre }}
             </span>
@@ -113,15 +121,39 @@ onMounted(async () => {
   padding: 1rem 0;
 }
 
+.detail-content {
+  position: relative;
+}
+
+/* Resplandor cálido detrás de la portada. Sin íconos: esta es la página
+   de un productor, no una portada del sitio. */
+.detail-glow {
+  position: absolute;
+  top: -1.5rem;
+  left: 0;
+  width: 560px;
+  max-width: 100%;
+  height: 320px;
+  background: radial-gradient(closest-side, rgba(140, 59, 38, 0.14), rgba(140, 59, 38, 0) 72%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.detail-content > *:not(.detail-glow) {
+  position: relative;
+  z-index: 1;
+}
+
 .back-link {
   display: inline-block;
-  color: var(--color-primary);
+  color: var(--color-primary-600);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 1.5rem;
 }
 
 .back-link:hover {
+  color: var(--color-primary-700);
   text-decoration: underline;
 }
 
@@ -133,9 +165,10 @@ onMounted(async () => {
 }
 
 .detail-image {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  background-color: var(--color-surface);
+  border: 1px solid var(--color-neutral-200);
+  background-color: var(--bg-muted);
 }
 
 .detail-img {
@@ -153,15 +186,17 @@ onMounted(async () => {
 }
 
 .detail-title {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-family: var(--font-headline);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.15;
   margin: 0 0 0.5rem;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .detail-location {
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   margin: 0 0 1rem;
 }
 
@@ -172,19 +207,18 @@ onMounted(async () => {
   margin-bottom: 1.25rem;
 }
 
+/* El fondo y el color de texto los pone colorDeCategoria() por :style. */
 .detail-tag {
   font-size: 0.8rem;
   padding: 0.3rem 0.75rem;
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  border-radius: 999px;
-  font-weight: 500;
+  border-radius: var(--radius-full);
+  font-weight: 600;
 }
 
 .detail-description {
   font-size: 1rem;
   line-height: 1.7;
-  color: var(--color-text);
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
 }
 
@@ -195,7 +229,7 @@ onMounted(async () => {
 .contact-name,
 .contact-phone {
   margin: 0.3rem 0;
-  color: var(--color-text);
+  color: var(--text-secondary);
 }
 
 .error-message {
@@ -207,6 +241,13 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .detail-layout {
     grid-template-columns: 1fr;
+  }
+}
+
+/* La decoración estorba en pantallas angostas: se retira por completo. */
+@media (max-width: 720px) {
+  .detail-glow {
+    display: none;
   }
 }
 </style>
