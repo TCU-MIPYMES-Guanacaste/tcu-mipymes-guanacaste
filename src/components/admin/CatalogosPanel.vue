@@ -143,17 +143,15 @@ function cancelarEdicion() {
       <div class="catalogo-card">
         <h3 class="catalogo-card-title">Categorías de alimentos</h3>
 
-        <form class="catalogo-alta catalogo-alta-categoria" @submit.prevent="agregarCategoria">
+        <form class="catalogo-alta" @submit.prevent="agregarCategoria">
           <SelectorIconoCategoria v-model="nuevoIcono" />
-          <div class="catalogo-alta-fila">
-            <input
-              v-model="nuevaCategoria"
-              type="text"
-              placeholder="Nombre de la categoría"
-              aria-label="Nombre de la categoría"
-            />
-            <button type="submit" class="btn-alta">Agregar</button>
-          </div>
+          <input
+            v-model="nuevaCategoria"
+            type="text"
+            placeholder="Nombre de la categoría"
+            aria-label="Nombre de la categoría"
+          />
+          <button type="submit" class="btn-alta">Agregar</button>
         </form>
 
         <ul class="catalogo-lista">
@@ -329,6 +327,7 @@ function cancelarEdicion() {
 
 .catalogo-alta {
   display: flex;
+  align-items: center;
   gap: var(--spacing-2);
   margin-bottom: var(--spacing-4);
 }
@@ -339,27 +338,16 @@ function cancelarEdicion() {
   border-radius: var(--radius-md);
 }
 
-/* La de categorías lleva además el selector de ícono, en su propia fila. */
-.catalogo-alta-categoria {
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.catalogo-alta-fila {
-  display: flex;
-  gap: var(--spacing-2);
-}
-
-.catalogo-alta-fila input {
-  flex: 1;
-  min-width: 0;
-}
-
 .catalogo-edicion-categoria {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--spacing-2);
   flex: 1;
+}
+
+.catalogo-edicion-categoria input {
+  flex: 1;
+  min-width: 0;
 }
 
 .btn-alta {
