@@ -12,23 +12,56 @@ import { supabase } from '@/lib/supabase'
 const currentUser = ref(null)
 
 /**
+ * Rol del administrador con sesión activa: 'superadmin', 'editor' o null.
+ * Singleton igual que currentUser: se lee una vez por cambio de sesión.
+ */
+const adminRol = ref(null)
+
+/**
+ * Lee el rol del usuario desde admin_profiles.
+ * Nunca lanza: si falla (sin fila, sin red, RLS), el rol queda en null y
+ * la aplicación se comporta como si fuera un editor.
+ */
+async function cargarRol(usuario) {
+  if (!usuario) {
+    adminRol.value = null
+    return
+  }
+
+  try {
+    const { data, error: rolError } = await supabase
+      .from('admin_profiles')
+      .select('rol')
+      .eq('id', usuario.id)
+      .maybeSingle()
+    adminRol.value = rolError ? null : (data?.rol ?? null)
+  } catch (err) {
+    console.warn('[useAuth] No se pudo leer el rol del administrador:', err?.message)
+    adminRol.value = null
+  }
+}
+
+/**
  * Promesa que resuelve cuando se conoce la sesión inicial.
  * Útil para vistas que necesitan saber si hay sesión antes de renderizar.
  */
 export const authReady = supabase.auth
   .getSession()
-  .then(({ data: { session } }) => {
+  .then(async ({ data: { session } }) => {
     currentUser.value = session?.user ?? null
+    await cargarRol(currentUser.value)
     return currentUser.value
   })
   .catch(() => {
     currentUser.value = null
+    adminRol.value = null
     return null
   })
 
 // Mantener el estado sincronizado con login, logout y refresco de token
 supabase.auth.onAuthStateChange((_event, session) => {
   currentUser.value = session?.user ?? null
+  cargarRol(currentUser.value)
 })
 
 /**
@@ -52,6 +85,7 @@ export function useAuth() {
   const error = ref(null)
 
   const isAuthenticated = computed(() => !!currentUser.value)
+  const esSuperadmin = computed(() => adminRol.value === 'superadmin')
 
   /**
    * Ejecuta una operación de auth manejando loading/error de forma uniforme.
@@ -76,6 +110,7 @@ export function useAuth() {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
       if (authError) throw authError
       currentUser.value = data.user
+      await cargarRol(data.user)
       return data
     })
   }
@@ -86,6 +121,7 @@ export function useAuth() {
       const { error: authError } = await supabase.auth.signOut()
       if (authError) throw authError
       currentUser.value = null
+      adminRol.value = null
     })
   }
 
@@ -112,7 +148,9 @@ export function useAuth() {
 
   return {
     currentUser,
+    adminRol,
     isAuthenticated,
+    esSuperadmin,
     loading,
     error,
     login,

@@ -9,15 +9,21 @@
 import { onMounted, reactive } from 'vue'
 import { useProductores } from '@/composables/useProductores'
 import { useCatalogos } from '@/composables/useCatalogos'
+import { usePaginacion } from '@/composables/usePaginacion'
 
 import SearchBar from '@/components/common/SearchBar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ProducerFilters from '@/components/producers/ProducerFilters.vue'
 import ProducerGrid from '@/components/producers/ProducerGrid.vue'
+import Pagination from '@/components/common/Pagination.vue'
 
 // Composables
 const { productores, loading, error, fetchProductores } = useProductores()
 const { cantones, categorias, fetchCantones, fetchCategorias } = useCatalogos()
+
+// Paginación solo de la presentación: `productores` sigue siendo la lista
+// completa que devolvió Supabase.
+const { page, totalPages, pageItems, irAPagina, resetear } = usePaginacion(productores, 12)
 
 // Estado de filtros activos
 const activeFilters = reactive({
@@ -41,6 +47,7 @@ function handleFilterChange(filters) {
 
 /** Aplicar todos los filtros activos y recargar productores */
 function applyFilters() {
+  resetear()
   fetchProductores({ ...activeFilters })
 }
 
@@ -130,8 +137,11 @@ onMounted(async () => {
           <p>⚠️ {{ error }}</p>
         </div>
 
-        <!-- Cuadrícula de productores -->
-        <ProducerGrid v-else :productores="productores" />
+        <!-- Cuadrícula de productores (solo la página actual) -->
+        <template v-else>
+          <ProducerGrid :productores="pageItems" />
+          <Pagination :page="page" :total-pages="totalPages" @ir="irAPagina" />
+        </template>
       </section>
     </div>
   </div>

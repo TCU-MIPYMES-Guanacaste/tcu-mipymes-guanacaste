@@ -7,6 +7,7 @@
  * - `supabase.storage.from(bucket)` devuelve un objeto con upload/remove simulados.
  * - `supabase.auth` expone funciones simuladas con respuestas por defecto.
  * - `supabase.rpc` es una función simulada.
+ * - `supabase.functions.invoke` es una función simulada (Edge Functions).
  */
 import { vi } from 'vitest'
 
@@ -52,10 +53,15 @@ export function crearSupabaseMock() {
     updateUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
   }
 
+  const functions = {
+    invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
+  }
+
   const supabase = {
     from: vi.fn((tabla) => crearBuilder(tabla)),
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     storage: { from: vi.fn(() => storage) },
+    functions,
     auth,
   }
 
@@ -78,8 +84,9 @@ export function crearSupabaseMock() {
     storage.remove.mockClear()
     supabase.rpc.mockClear()
     supabase.from.mockClear()
+    functions.invoke.mockClear()
     for (const fn of Object.values(auth)) fn.mockClear()
   }
 
-  return { supabase, storage, auth, responder, consultasDe, reiniciar }
+  return { supabase, storage, auth, functions, responder, consultasDe, reiniciar }
 }

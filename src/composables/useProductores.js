@@ -253,8 +253,15 @@ export function useProductores() {
     return ejecutar(async () => {
       const foto = await obtenerFotoActual(id)
 
-      const { error: deleteError } = await supabase.from('productores').delete().eq('id', id)
+      const { data, error: deleteError } = await supabase
+        .from('productores')
+        .delete()
+        .eq('id', id)
+        .select()
       if (deleteError) throw deleteError
+      if (!data || data.length === 0) {
+        throw new Error('No se pudo eliminar: el productor ya no existe o no tiene permiso.')
+      }
 
       await deleteImage(foto)
 

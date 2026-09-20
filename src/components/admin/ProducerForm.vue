@@ -5,6 +5,7 @@
 import { reactive, watch } from 'vue'
 import { esTelefonoValido } from '@/utils/telefono'
 import ImageUploader from './ImageUploader.vue'
+import ProductosDestacadosPanel from './ProductosDestacadosPanel.vue'
 
 const props = defineProps({
   /** Datos iniciales del productor (modo edición) */
@@ -141,6 +142,7 @@ function onSubmit() {
 </script>
 
 <template>
+  <div class="producer-form-layout">
   <form @submit.prevent="onSubmit" class="producer-form-card">
     <div class="form-grid">
       <!-- Columna Izquierda: Información -->
@@ -267,7 +269,7 @@ function onSubmit() {
                 :checked="form.categoria_ids.includes(cat.id)"
                 @change="toggleCategoria(cat.id)"
               />
-              <span class="category-icon">{{ cat.icono || '🌾' }}</span>
+              <span class="category-icon">{{ cat.icono || '🏷️' }}</span>
               <span class="category-name">{{ cat.nombre }}</span>
             </label>
           </div>
@@ -308,6 +310,16 @@ function onSubmit() {
       </button>
     </div>
   </form>
+
+  <!-- Solo con el productor ya guardado: los productos necesitan su id. -->
+  <ProductosDestacadosPanel
+    v-if="initialData?.id"
+    :productor-id="initialData.id"
+  />
+  <p v-else class="productos-hint">
+    💡 Podrá agregar los productos destacados de este productor después de guardarlo.
+  </p>
+  </div>
 </template>
 
 <style scoped>
@@ -572,5 +584,23 @@ input:checked + .slider:before {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* El panel de productos va FUERA del <form> (anidar formularios es HTML
+   inválido), así que la raíz del componente es este contenedor. */
+.producer-form-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.productos-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  background-color: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-4);
+  margin: 0;
 }
 </style>

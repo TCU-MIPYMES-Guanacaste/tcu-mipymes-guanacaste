@@ -5,9 +5,16 @@
   - Dashboard / Resumen
   - Listado de productores
   - Crear nuevo productor
+  - Categorías y cantones
+  - Administradores (solo superadmin)
 -->
 <script setup>
 import { RouterLink } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+
+// El enlace de administradores solo se le ofrece a un superadmin; el
+// guardia de la ruta y las políticas RLS son las barreras de verdad.
+const { esSuperadmin } = useAuth()
 </script>
 
 <template>
@@ -25,6 +32,23 @@ import { RouterLink } from 'vue-router'
         active-class="sidebar-link--active"
       >
         ➕ Nuevo Productor
+      </RouterLink>
+
+      <RouterLink
+        to="/admin/categorias-cantones"
+        class="sidebar-link"
+        active-class="sidebar-link--active"
+      >
+        🏷️ Categorías y Cantones
+      </RouterLink>
+
+      <RouterLink
+        v-if="esSuperadmin"
+        to="/admin/administradores"
+        class="sidebar-link"
+        active-class="sidebar-link--active"
+      >
+        👥 Administradores
       </RouterLink>
 
       <div class="sidebar-divider"></div>

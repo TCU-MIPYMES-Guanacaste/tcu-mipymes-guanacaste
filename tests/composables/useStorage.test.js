@@ -60,6 +60,26 @@ describe('useStorage', () => {
       const { uploadImage } = useStorage()
       await expect(uploadImage(new File(['x'], 'a.png', { type: 'image/png' }))).rejects.toThrow('cuota excedida')
     })
+
+    it('sube a la carpeta indicada cuando se pasa el segundo argumento', async () => {
+      const archivo = new File(['x'], 'queso.webp', { type: 'image/webp' })
+      const { uploadImage } = useStorage()
+      const ruta = await uploadImage(archivo, 'productos')
+
+      expect(ruta).toMatch(/^productos\/\d+-[a-z0-9]+\.webp$/)
+      expect(mockRef.actual.storage.upload).toHaveBeenCalledWith(
+        ruta,
+        archivo,
+        expect.objectContaining({ upsert: false, contentType: 'image/webp' })
+      )
+    })
+
+    it('sin segundo argumento sigue usando la carpeta productores', async () => {
+      const archivo = new File(['x'], 'foto.png', { type: 'image/png' })
+      const { uploadImage } = useStorage()
+      const ruta = await uploadImage(archivo)
+      expect(ruta.startsWith('productores/')).toBe(true)
+    })
   })
 
   describe('deleteImage', () => {
