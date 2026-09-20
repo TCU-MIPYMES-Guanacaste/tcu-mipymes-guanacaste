@@ -16,16 +16,16 @@ describe('useCatalogos', () => {
   })
 
   describe('crearCategoria', () => {
-    it('inserta nombre e icono recortados y agrega la fila en orden alfabético', async () => {
-      mockRef.actual.responder('categorias', { data: { id: 'c2', nombre: 'Lácteos', icono: '🥛' }, error: null })
+    it('inserta el nombre recortado con icono null y agrega la fila en orden alfabético', async () => {
+      mockRef.actual.responder('categorias', { data: { id: 'c2', nombre: 'Lácteos', icono: null }, error: null })
       const { crearCategoria, categorias } = useCatalogos()
-      categorias.value = [{ id: 'c1', nombre: 'Verduras', icono: '🥬' }]
+      categorias.value = [{ id: 'c1', nombre: 'Verduras', icono: null }]
 
-      const creada = await crearCategoria('  Lácteos  ', ' 🥛 ')
+      const creada = await crearCategoria('  Lácteos  ')
 
       const [consulta] = mockRef.actual.consultasDe('categorias')
-      expect(consulta.insert).toHaveBeenCalledWith({ nombre: 'Lácteos', icono: '🥛' })
-      expect(creada).toEqual({ id: 'c2', nombre: 'Lácteos', icono: '🥛' })
+      expect(consulta.insert).toHaveBeenCalledWith({ nombre: 'Lácteos', icono: null })
+      expect(creada).toEqual({ id: 'c2', nombre: 'Lácteos', icono: null })
       expect(categorias.value.map((c) => c.nombre)).toEqual(['Lácteos', 'Verduras'])
     })
 
@@ -36,15 +36,6 @@ describe('useCatalogos', () => {
       expect(creada).toBeNull()
       expect(mockRef.actual.consultasDe('categorias')).toHaveLength(0)
       expect(error.value).toBe('El nombre de la categoría es obligatorio.')
-    })
-
-    it('un icono vacío se guarda como null', async () => {
-      mockRef.actual.responder('categorias', { data: { id: 'c2', nombre: 'Miel', icono: null }, error: null })
-      const { crearCategoria } = useCatalogos()
-      await crearCategoria('Miel', '')
-
-      const [consulta] = mockRef.actual.consultasDe('categorias')
-      expect(consulta.insert).toHaveBeenCalledWith({ nombre: 'Miel', icono: null })
     })
 
     it('expone el error de Supabase (por ejemplo, nombre duplicado)', async () => {

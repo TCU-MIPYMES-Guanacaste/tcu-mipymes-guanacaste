@@ -26,7 +26,6 @@ const { mostrarExito, mostrarError } = useToast()
 
 // Formularios de alta
 const nuevaCategoria = ref('')
-const nuevoIcono = ref('')
 const nuevoCanton = ref('')
 
 // Renombrado en línea: id de la fila en edición y el texto provisional
@@ -41,13 +40,12 @@ onMounted(() => {
 
 // --- Categorías ---
 async function agregarCategoria() {
-  const creada = await crearCategoria(nuevaCategoria.value, nuevoIcono.value)
+  const creada = await crearCategoria(nuevaCategoria.value)
   if (!creada) {
     mostrarError(error.value || 'No se pudo crear la categoría.')
     return
   }
   nuevaCategoria.value = ''
-  nuevoIcono.value = ''
   mostrarExito('Categoría creada.')
 }
 
@@ -141,14 +139,6 @@ function cancelarEdicion() {
 
         <form class="catalogo-alta" @submit.prevent="agregarCategoria">
           <input
-            v-model="nuevoIcono"
-            type="text"
-            class="input-icono"
-            maxlength="4"
-            placeholder="🌾"
-            aria-label="Icono de la categoría"
-          />
-          <input
             v-model="nuevaCategoria"
             type="text"
             placeholder="Nombre de la categoría"
@@ -172,7 +162,7 @@ function cancelarEdicion() {
             </template>
             <template v-else>
               <span class="catalogo-nombre">
-                <span class="catalogo-icono">{{ cat.icono || '🌾' }}</span>
+                <span class="catalogo-icono">🌾</span>
                 {{ cat.nombre }}
               </span>
               <div class="catalogo-acciones">
@@ -335,12 +325,6 @@ function cancelarEdicion() {
   padding: var(--spacing-2) var(--spacing-3);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-md);
-}
-
-.input-icono {
-  width: 64px;
-  flex-shrink: 0;
-  text-align: center;
 }
 
 .btn-alta {

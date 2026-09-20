@@ -269,7 +269,7 @@ function onSubmit() {
                 :checked="form.categoria_ids.includes(cat.id)"
                 @change="toggleCategoria(cat.id)"
               />
-              <span class="category-icon">{{ cat.icono || '🌾' }}</span>
+              <span class="category-icon">🌾</span>
               <span class="category-name">{{ cat.nombre }}</span>
             </label>
           </div>
