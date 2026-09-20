@@ -10,9 +10,13 @@
 --      cambiar el rol de cualquier fila (incluida la propia) y ascenderse.
 --      La lectura (SELECT) no cambia.
 --   3. Avisa si el proyecto quedara sin ningún superadmin.
+--   4. Corrige la lectura pública de productos_destacados: antes cualquiera
+--      podía leer TODOS los productos (USING (true)), sin filtrar por
+--      disponibilidad ni por si el productor dueño seguía activo. Ahora
+--      exige disponible = true y productor activo, igual que productores.
 --
--- No cambia las políticas de productores, productos_destacados, categorias,
--- cantones, productor_categorias, contactos_whatsapp ni storage.objects:
+-- No cambia las políticas de productores, categorias, cantones,
+-- productor_categorias, contactos_whatsapp ni storage.objects:
 -- categorías y cantones siguen siendo gestionables por cualquier admin.
 --
 -- Es idempotente: se puede ejecutar más de una vez sin romper nada.
@@ -67,6 +71,26 @@ BEGIN
     RAISE WARNING 'No hay ningún superadmin en admin_profiles. Asigne el rol con: UPDATE public.admin_profiles SET rol = ''superadmin'' WHERE id = ''UUID-DEL-ADMIN'';';
   END IF;
 END $$;
+
+
+-- ============================================================================
+-- 4. productos_destacados: el público solo ve productos disponibles de
+--    productores activos (antes: USING (true), sin filtro alguno).
+-- Coherente con la política ya existente de productores (migración 002).
+-- ============================================================================
+DROP POLICY IF EXISTS "productos_dest_lectura_publica" ON public.productos_destacados;
+
+CREATE POLICY "productos_dest_lectura_publica" ON public.productos_destacados FOR SELECT
+  USING (
+    public.es_admin()
+    OR (
+      disponible = true
+      AND EXISTS (
+        SELECT 1 FROM public.productores p
+        WHERE p.id = productor_id AND p.activo = true
+      )
+    )
+  );
 
 
 -- ============================================================================
