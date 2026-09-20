@@ -251,7 +251,7 @@ function quitarImagen() {
   width: 100%;
   height: 220px;
   border: 2px dashed var(--color-neutral-300);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background-color: var(--bg-secondary);
   display: flex;
   justify-content: center;
@@ -267,6 +267,7 @@ function quitarImagen() {
 
 .dropzone.has-preview {
   border-style: solid;
+  border-color: var(--color-neutral-200);
 }
 
 .uploader-placeholder {
