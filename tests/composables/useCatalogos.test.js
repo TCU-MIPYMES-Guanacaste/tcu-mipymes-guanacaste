@@ -16,17 +16,26 @@ describe('useCatalogos', () => {
   })
 
   describe('crearCategoria', () => {
-    it('inserta el nombre recortado con icono null y agrega la fila en orden alfabético', async () => {
-      mockRef.actual.responder('categorias', { data: { id: 'c2', nombre: 'Lácteos', icono: null }, error: null })
+    it('inserta nombre e icono recortados y agrega la fila en orden alfabético', async () => {
+      mockRef.actual.responder('categorias', { data: { id: 'c2', nombre: 'Lácteos', icono: '🧀' }, error: null })
       const { crearCategoria, categorias } = useCatalogos()
-      categorias.value = [{ id: 'c1', nombre: 'Verduras', icono: null }]
+      categorias.value = [{ id: 'c1', nombre: 'Verduras', icono: '🥬' }]
 
-      const creada = await crearCategoria('  Lácteos  ')
+      const creada = await crearCategoria('  Lácteos  ', ' 🧀 ')
 
       const [consulta] = mockRef.actual.consultasDe('categorias')
-      expect(consulta.insert).toHaveBeenCalledWith({ nombre: 'Lácteos', icono: null })
-      expect(creada).toEqual({ id: 'c2', nombre: 'Lácteos', icono: null })
+      expect(consulta.insert).toHaveBeenCalledWith({ nombre: 'Lácteos', icono: '🧀' })
+      expect(creada).toEqual({ id: 'c2', nombre: 'Lácteos', icono: '🧀' })
       expect(categorias.value.map((c) => c.nombre)).toEqual(['Lácteos', 'Verduras'])
+    })
+
+    it('un icono vacío se guarda como el de respaldo (🏷️)', async () => {
+      mockRef.actual.responder('categorias', { data: { id: 'c2', nombre: 'Miel', icono: '🏷️' }, error: null })
+      const { crearCategoria } = useCatalogos()
+      await crearCategoria('Miel', '')
+
+      const [consulta] = mockRef.actual.consultasDe('categorias')
+      expect(consulta.insert).toHaveBeenCalledWith({ nombre: 'Miel', icono: '🏷️' })
     })
 
     it('un nombre vacío no llega a Supabase y deja el error', async () => {
@@ -49,17 +58,27 @@ describe('useCatalogos', () => {
   })
 
   describe('renombrarCategoria', () => {
-    it('actualiza por id y reemplaza la fila en la lista', async () => {
-      mockRef.actual.responder('categorias', { data: { id: 'c1', nombre: 'Hortalizas', icono: '🥬' }, error: null })
+    it('actualiza nombre e icono por id y reemplaza la fila en la lista', async () => {
+      mockRef.actual.responder('categorias', { data: { id: 'c1', nombre: 'Hortalizas', icono: '🥦' }, error: null })
       const { renombrarCategoria, categorias } = useCatalogos()
       categorias.value = [{ id: 'c1', nombre: 'Verduras', icono: '🥬' }]
 
-      await renombrarCategoria('c1', '  Hortalizas ')
+      await renombrarCategoria('c1', '  Hortalizas ', ' 🥦 ')
 
       const [consulta] = mockRef.actual.consultasDe('categorias')
-      expect(consulta.update).toHaveBeenCalledWith({ nombre: 'Hortalizas' })
+      expect(consulta.update).toHaveBeenCalledWith({ nombre: 'Hortalizas', icono: '🥦' })
       expect(consulta.eq).toHaveBeenCalledWith('id', 'c1')
-      expect(categorias.value).toEqual([{ id: 'c1', nombre: 'Hortalizas', icono: '🥬' }])
+      expect(categorias.value).toEqual([{ id: 'c1', nombre: 'Hortalizas', icono: '🥦' }])
+    })
+
+    it('un icono vacío se guarda como el de respaldo (🏷️)', async () => {
+      mockRef.actual.responder('categorias', { data: { id: 'c1', nombre: 'Verduras', icono: '🏷️' }, error: null })
+      const { renombrarCategoria } = useCatalogos()
+
+      await renombrarCategoria('c1', 'Verduras', '')
+
+      const [consulta] = mockRef.actual.consultasDe('categorias')
+      expect(consulta.update).toHaveBeenCalledWith({ nombre: 'Verduras', icono: '🏷️' })
     })
   })
 

@@ -12,6 +12,9 @@ function ordenarPorNombre(lista) {
   return [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 }
 
+/** Ícono asignado cuando el usuario no elige ninguno, para mantener la lista uniforme. */
+const ICONO_POR_DEFECTO = '🏷️'
+
 export function useCatalogos() {
   // Estado reactivo para cantones y categorías
   const cantones = ref([])
@@ -88,19 +91,22 @@ export function useCatalogos() {
   }
 
   /**
-   * Crea una categoría. El ícono no se personaliza por categoría: la
-   * interfaz siempre muestra uno estándar para "alimentos" (🌾).
+   * Crea una categoría. Si no llega ícono, se guarda el de respaldo
+   * (🏷️) para que la lista se vea uniforme sin depender de un fallback
+   * en cada lugar donde se muestra.
    * @param {string} nombre
+   * @param {string} [icono]
    * @returns {Promise<Object|null>}
    */
-  function crearCategoria(nombre) {
+  function crearCategoria(nombre, icono) {
     return ejecutar(async () => {
       const limpio = (nombre ?? '').trim()
       if (!limpio) throw new Error('El nombre de la categoría es obligatorio.')
+      const iconoLimpio = (icono ?? '').trim() || ICONO_POR_DEFECTO
 
       const { data, error: insertError } = await supabase
         .from('categorias')
-        .insert({ nombre: limpio, icono: null })
+        .insert({ nombre: limpio, icono: iconoLimpio })
         .select('id, nombre, icono')
         .single()
       if (insertError) throw insertError
@@ -111,17 +117,19 @@ export function useCatalogos() {
   }
 
   /**
-   * Cambia el nombre de una categoría.
+   * Cambia el nombre y el ícono de una categoría (mismo respaldo que al crear).
+   * @param {string} icono
    * @returns {Promise<Object|null>}
    */
-  function renombrarCategoria(id, nombre) {
+  function renombrarCategoria(id, nombre, icono) {
     return ejecutar(async () => {
       const limpio = (nombre ?? '').trim()
       if (!limpio) throw new Error('El nombre de la categoría es obligatorio.')
+      const iconoLimpio = (icono ?? '').trim() || ICONO_POR_DEFECTO
 
       const { data, error: updateError } = await supabase
         .from('categorias')
-        .update({ nombre: limpio })
+        .update({ nombre: limpio, icono: iconoLimpio })
         .eq('id', id)
         .select('id, nombre, icono')
         .single()
