@@ -40,8 +40,8 @@ import { RouterLink } from 'vue-router'
 .admin-sidebar {
   width: 240px;
   min-height: 100%;
-  background: var(--color-white);
-  border-right: 1px solid var(--color-border);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--color-neutral-200);
   padding: 1.5rem 1rem;
 }
 
@@ -50,7 +50,7 @@ import { RouterLink } from 'vue-router'
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   margin: 0 0 1rem;
   padding: 0 0.5rem;
 }
@@ -58,32 +58,33 @@ import { RouterLink } from 'vue-router'
 .sidebar-link {
   display: block;
   padding: 0.6rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   margin-bottom: 0.25rem;
 }
 
 .sidebar-link:hover {
-  background-color: var(--color-surface);
+  background-color: var(--bg-muted);
 }
 
+/* Estado activo en barro (antes era el verde de la paleta vieja). */
 .sidebar-link--active {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-600);
   font-weight: 600;
 }
 
 .sidebar-link--back {
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
 .sidebar-divider {
   height: 1px;
-  background-color: var(--color-border);
+  background-color: var(--color-neutral-200);
   margin: 1rem 0;
 }
 </style>
