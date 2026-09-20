@@ -35,7 +35,7 @@ function clearSearch() {
         v-model="searchText"
         type="text"
         class="search-input"
-        placeholder="Buscar productor por nombre..."
+        placeholder="Buscar por nombre o descripción..."
         aria-label="Buscar productores"
         @keyup.enter="handleSearch"
       />

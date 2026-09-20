@@ -1,315 +1,276 @@
 /**
  * Composable para operaciones CRUD de productores.
  *
- * Maneja la consulta, creación, actualización y eliminación de productores,
- * así como la subida de imágenes al almacenamiento de Supabase.
+ * Consulta, crea, actualiza y elimina productores junto con sus categorías
+ * y su foto. La subida/borrado físico de la foto lo hace useStorage.
  */
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
+import { useStorage } from '@/composables/useStorage'
+import { normalizarTelefono } from '@/utils/telefono'
+import { sanitizarBusqueda } from '@/utils/busqueda'
+
+// Columnas y relaciones que se traen siempre al leer productores
+const SELECT_PRODUCTOR = `
+  *,
+  canton:cantones(id, nombre),
+  categorias:productor_categorias(
+    categoria:categorias(id, nombre)
+  )
+`
+
+// Campos de texto opcionales: si llegan vacíos se guardan como NULL
+const CAMPOS_OPCIONALES = ['email', 'descripcion', 'direccion_detalle', 'foto_url']
+
+/**
+ * Separa los datos del formulario en: campos del productor (limpios),
+ * ids de categorías y archivo de foto pendiente de subir.
+ */
+function prepararDatos(data) {
+  const { categoria_ids = [], fotoFile = null, ...campos } = data
+  const limpios = {}
+
+  for (const [clave, valor] of Object.entries(campos)) {
+    limpios[clave] = typeof valor === 'string' ? valor.trim() : valor
+  }
+
+  for (const clave of CAMPOS_OPCIONALES) {
+    if (limpios[clave] === '') limpios[clave] = null
+  }
+
+  if (limpios.canton_id === '') limpios.canton_id = null
+
+  if (limpios.telefono) {
+    limpios.telefono = normalizarTelefono(limpios.telefono) ?? limpios.telefono
+  }
+
+  return { campos: limpios, categoria_ids, fotoFile }
+}
 
 export function useProductores() {
-  // Estado reactivo
   const productores = ref([])
   const loading = ref(false)
   const error = ref(null)
 
-  /**
-   * Obtener la lista de productores con filtros opcionales.
-   * Solo retorna productores activos para la vista pública.
-   *
-   * @param {Object} filters - Filtros opcionales
-   * @param {number} filters.canton_id - Filtrar por cantón
-   * @param {number} filters.categoria_id - Filtrar por categoría
-   * @param {string} filters.search - Texto de búsqueda (busca en nombre_negocio)
-   * @param {boolean} filters.onlyActive - Solo productores activos (por defecto: true)
-   */
-  async function fetchProductores(filters = {}) {
+  const { uploadImage, deleteImage } = useStorage()
+
+  /** Envuelve una operación con loading/error; devuelve `valorSiFalla` si lanza. */
+  async function ejecutar(operacion, valorSiFalla) {
     loading.value = true
     error.value = null
-
     try {
-      // Consulta base con relaciones
-      let query = supabase
-        .from('productores')
-        .select(`
-          *,
-          canton:cantones(id, nombre),
-          categorias:productor_categorias(
-            categoria:categorias(id, nombre)
-          )
-        `)
+      return await operacion()
+    } catch (err) {
+      error.value = err?.message || 'Ocurrió un error inesperado'
+      console.error('[useProductores]', err)
+      return valorSiFalla
+    } finally {
+      loading.value = false
+    }
+  }
 
-      // Filtrar solo productores activos (por defecto para la vista pública)
+  /** Reemplaza las categorías de un productor por la lista indicada. */
+  async function guardarCategorias(productorId, categoriaIds, { reemplazar }) {
+    if (reemplazar) {
+      const { error: deleteError } = await supabase
+        .from('productor_categorias')
+        .delete()
+        .eq('productor_id', productorId)
+      if (deleteError) throw deleteError
+    }
+
+    if (categoriaIds.length === 0) return
+
+    const filas = categoriaIds.map((categoriaId) => ({
+      productor_id: productorId,
+      categoria_id: categoriaId,
+    }))
+    const { error: insertError } = await supabase.from('productor_categorias').insert(filas)
+    if (insertError) throw insertError
+  }
+
+  /** Lee solo la ruta de la foto actual de un productor. */
+  async function obtenerFotoActual(id) {
+    const { data, error: selectError } = await supabase
+      .from('productores')
+      .select('foto_url')
+      .eq('id', id)
+      .single()
+    if (selectError) throw selectError
+    return data?.foto_url ?? null
+  }
+
+  /**
+   * Lista productores con filtros opcionales.
+   *
+   * @param {Object} filters
+   * @param {string} [filters.search]       - Texto a buscar en nombre y descripción
+   * @param {string} [filters.canton_id]
+   * @param {string} [filters.categoria_id]
+   * @param {boolean} [filters.onlyActive]  - Solo activos (por defecto true)
+   */
+  async function fetchProductores(filters = {}) {
+    const resultado = await ejecutar(async () => {
       const onlyActive = filters.onlyActive !== undefined ? filters.onlyActive : true
+
+      // Filtro por categoría en dos consultas: primero los ids de la tabla puente y luego
+      // los productores. Es más simple de leer y mantener que un embed anidado con !inner.
+      let idsPorCategoria = null
+      if (filters.categoria_id) {
+        const { data: relaciones, error: catError } = await supabase
+          .from('productor_categorias')
+          .select('productor_id')
+          .eq('categoria_id', filters.categoria_id)
+        if (catError) throw catError
+
+        idsPorCategoria = relaciones?.map((r) => r.productor_id) ?? []
+        if (idsPorCategoria.length === 0) return []
+      }
+
+      let query = supabase.from('productores').select(SELECT_PRODUCTOR)
+
+      if (idsPorCategoria) {
+        query = query.in('id', idsPorCategoria)
+      }
+
       if (onlyActive) {
         query = query.eq('activo', true)
       }
 
-      // Filtrar por cantón si se proporcionó
       if (filters.canton_id) {
         query = query.eq('canton_id', filters.canton_id)
       }
 
-      // Filtrar por categoría a través de la tabla intermedia
-      if (filters.categoria_id) {
-        const { data: catRelations, error: catError } = await supabase
-          .from('productor_categorias')
-          .select('productor_id')
-          .eq('categoria_id', filters.categoria_id)
-
-        if (catError) throw catError
-
-        const producerIds = catRelations?.map((r) => r.productor_id) || []
-
-        // Si ningún productor tiene esta categoría, retornamos vacío de inmediato
-        if (producerIds.length === 0) {
-          productores.value = []
-          return
-        }
-
-        query = query.in('id', producerIds)
+      const texto = sanitizarBusqueda(filters.search)
+      if (texto) {
+        query = query.or(`nombre_negocio.ilike.%${texto}%,descripcion.ilike.%${texto}%`)
       }
 
-      // Búsqueda por texto en el nombre del negocio (case-insensitive)
-      if (filters.search) {
-        query = query.ilike('nombre_negocio', `%${filters.search}%`)
-      }
-
-      // Ordenar por nombre del negocio
       query = query.order('nombre_negocio', { ascending: true })
 
       const { data, error: fetchError } = await query
-
       if (fetchError) throw fetchError
 
-      productores.value = data ?? []
-    } catch (err) {
-      error.value = err.message || 'Error al obtener los productores'
-      console.error('[useProductores] Error en fetchProductores:', err)
-    } finally {
-      loading.value = false
-    }
+      return data ?? []
+    }, [])
+
+    productores.value = resultado
   }
 
   /**
-   * Obtener un productor por su ID con todas sus relaciones.
-   *
-   * @param {string|number} id - ID del productor
-   * @returns {Object|null} Datos del productor o null si no se encontró
+   * Obtiene un productor por id con sus relaciones.
+   * @returns {Promise<Object|null>}
    */
-  async function fetchProductorById(id) {
-    loading.value = true
-    error.value = null
-
-    try {
+  function fetchProductorById(id) {
+    return ejecutar(async () => {
       const { data, error: fetchError } = await supabase
         .from('productores')
-        .select(`
-          *,
-          canton:cantones(id, nombre),
-          categorias:productor_categorias(
-            categoria:categorias(id, nombre)
-          )
-        `)
+        .select(SELECT_PRODUCTOR)
         .eq('id', id)
         .single()
-
       if (fetchError) throw fetchError
-
       return data
-    } catch (err) {
-      error.value = err.message || 'Error al obtener el productor'
-      console.error('[useProductores] Error en fetchProductorById:', err)
-      return null
-    } finally {
-      loading.value = false
-    }
+    }, null)
   }
 
   /**
-   * Crear un nuevo productor con sus asociaciones de categorías.
-   *
-   * @param {Object} data - Datos del productor
-   * @param {Array<number>} data.categoria_ids - IDs de las categorías a asociar
-   * @returns {Object|null} Productor creado o null si hubo error
+   * Crea un productor. Si viene `fotoFile`, la sube primero.
+   * @returns {Promise<Object|null>} Registro creado o null si falló
    */
-  async function createProductor(data) {
-    loading.value = true
-    error.value = null
+  function createProductor(data) {
+    return ejecutar(async () => {
+      const { campos, categoria_ids, fotoFile } = prepararDatos(data)
 
-    try {
-      // Separar los IDs de categorías del resto de los datos
-      const { categoria_ids = [], ...productorData } = data
+      let fotoSubida = null
+      if (fotoFile) {
+        fotoSubida = await uploadImage(fotoFile)
+        campos.foto_url = fotoSubida
+      }
 
-      // Insertar el productor
-      const { data: newProductor, error: insertError } = await supabase
+      const { data: nuevo, error: insertError } = await supabase
         .from('productores')
-        .insert(productorData)
+        .insert(campos)
         .select()
         .single()
 
-      if (insertError) throw insertError
-
-      // Insertar las asociaciones de categorías si existen
-      if (categoria_ids.length > 0) {
-        const categoriasInsert = categoria_ids.map((catId) => ({
-          productor_id: newProductor.id,
-          categoria_id: catId,
-        }))
-
-        const { error: catError } = await supabase
-          .from('productor_categorias')
-          .insert(categoriasInsert)
-
-        if (catError) throw catError
+      if (insertError) {
+        // No dejar la foto huérfana si el registro no se creó
+        if (fotoSubida) await deleteImage(fotoSubida)
+        throw insertError
       }
 
-      return newProductor
-    } catch (err) {
-      error.value = err.message || 'Error al crear el productor'
-      console.error('[useProductores] Error en createProductor:', err)
-      return null
-    } finally {
-      loading.value = false
-    }
+      await guardarCategorias(nuevo.id, categoria_ids, { reemplazar: false })
+
+      return nuevo
+    }, null)
   }
 
   /**
-   * Actualizar un productor existente y re-asociar sus categorías.
-   *
-   * @param {string|number} id - ID del productor a actualizar
-   * @param {Object} data - Datos actualizados
-   * @param {Array<number>} data.categoria_ids - Nuevos IDs de categorías
-   * @returns {Object|null} Productor actualizado o null si hubo error
+   * Actualiza un productor y re-asocia sus categorías.
+   * Sube la foto nueva si viene `fotoFile` y borra la anterior si cambió.
+   * @returns {Promise<Object|null>}
    */
-  async function updateProductor(id, data) {
-    loading.value = true
-    error.value = null
+  function updateProductor(id, data) {
+    return ejecutar(async () => {
+      const { campos, categoria_ids, fotoFile } = prepararDatos(data)
+      const fotoAnterior = await obtenerFotoActual(id)
 
-    try {
-      // Separar los IDs de categorías del resto de los datos
-      const { categoria_ids = [], ...productorData } = data
+      let fotoNueva = null
+      if (fotoFile) {
+        fotoNueva = await uploadImage(fotoFile)
+        campos.foto_url = fotoNueva
+      }
 
-      // Actualizar los datos del productor
-      const { data: updated, error: updateError } = await supabase
+      const { data: actualizado, error: updateError } = await supabase
         .from('productores')
-        .update(productorData)
+        .update(campos)
         .eq('id', id)
         .select()
         .single()
 
-      if (updateError) throw updateError
-
-      // Re-asociar categorías: eliminar las existentes y crear las nuevas
-      const { error: deleteError } = await supabase
-        .from('productor_categorias')
-        .delete()
-        .eq('productor_id', id)
-
-      if (deleteError) throw deleteError
-
-      if (categoria_ids.length > 0) {
-        const categoriasInsert = categoria_ids.map((catId) => ({
-          productor_id: id,
-          categoria_id: catId,
-        }))
-
-        const { error: catError } = await supabase
-          .from('productor_categorias')
-          .insert(categoriasInsert)
-
-        if (catError) throw catError
+      if (updateError) {
+        // El registro no cambió: la foto nueva quedaría huérfana
+        if (fotoNueva) await deleteImage(fotoNueva)
+        throw updateError
       }
 
-      return updated
-    } catch (err) {
-      error.value = err.message || 'Error al actualizar el productor'
-      console.error('[useProductores] Error en updateProductor:', err)
-      return null
-    } finally {
-      loading.value = false
-    }
+      // El registro ya apunta a la foto nueva: la anterior sobra
+      if (fotoAnterior && fotoAnterior !== campos.foto_url) {
+        await deleteImage(fotoAnterior)
+      }
+
+      await guardarCategorias(id, categoria_ids, { reemplazar: true })
+
+      return actualizado
+    }, null)
   }
 
   /**
-   * Eliminar un productor por su ID.
-   *
-   * @param {string|number} id - ID del productor a eliminar
-   * @returns {boolean} true si se eliminó correctamente
+   * Elimina un productor y su foto. Las categorías se borran por CASCADE.
+   * @returns {Promise<boolean>}
    */
-  async function deleteProductor(id) {
-    loading.value = true
-    error.value = null
+  function deleteProductor(id) {
+    return ejecutar(async () => {
+      const foto = await obtenerFotoActual(id)
 
-    try {
-      // Las asociaciones de categorías se eliminan automáticamente por CASCADE
-      const { error: deleteError } = await supabase
-        .from('productores')
-        .delete()
-        .eq('id', id)
-
+      const { error: deleteError } = await supabase.from('productores').delete().eq('id', id)
       if (deleteError) throw deleteError
 
-      // Actualizar la lista local removiendo el productor eliminado
+      await deleteImage(foto)
+
       productores.value = productores.value.filter((p) => p.id !== id)
-
       return true
-    } catch (err) {
-      error.value = err.message || 'Error al eliminar el productor'
-      console.error('[useProductores] Error en deleteProductor:', err)
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * Subir una imagen al bucket 'product-images' de Supabase Storage.
-   *
-   * @param {File} file - Archivo de imagen a subir
-   * @returns {string|null} Ruta del archivo subido o null si hubo error
-   */
-  async function uploadImage(file) {
-    loading.value = true
-    error.value = null
-
-    try {
-      // Generar un nombre único para evitar colisiones
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `productores/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        })
-
-      if (uploadError) throw uploadError
-
-      return filePath
-    } catch (err) {
-      error.value = err.message || 'Error al subir la imagen'
-      console.error('[useProductores] Error en uploadImage:', err)
-      return null
-    } finally {
-      loading.value = false
-    }
+    }, false)
   }
 
   return {
-    // Estado reactivo
     productores,
     loading,
     error,
-
-    // Métodos
     fetchProductores,
     fetchProductorById,
     createProductor,
     updateProductor,
     deleteProductor,
-    uploadImage,
   }
 }
