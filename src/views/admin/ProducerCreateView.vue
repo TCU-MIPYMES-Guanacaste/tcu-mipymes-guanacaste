@@ -65,9 +65,10 @@ function handleCancel() {
 }
 
 .admin-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text);
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
 }
 </style>

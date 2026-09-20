@@ -27,7 +27,12 @@ async function handleLogout() {
     <div class="header-container">
       <!-- Logo y nombre del sitio -->
       <RouterLink to="/" class="header-brand">
-        <span class="brand-icon">🌿</span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 21V9" />
+            <path d="M12 9C7 9 4 6 4 2c5 0 8 3 8 7Z" />
+          </svg>
+        </span>
         <div class="brand-text">
           <h1 class="brand-name">Directorio MIPYMES</h1>
           <span class="brand-subtitle">Guanacaste, Costa Rica</span>
@@ -84,13 +89,28 @@ async function handleLogout() {
   color: inherit;
 }
 
-.brand-icon {
-  font-size: 1.75rem;
+/* Cuadro con la hoja de marca: verde monte sobre el encabezado barro. */
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background-color: var(--color-warm-600);
+  color: var(--color-warm-50);
+}
+
+.brand-mark svg {
+  width: 18px;
+  height: 18px;
 }
 
 .brand-name {
+  font-family: var(--font-headline);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
 }
 

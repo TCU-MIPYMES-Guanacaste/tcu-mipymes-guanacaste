@@ -313,7 +313,7 @@ function onSubmit() {
 <style scoped>
 .producer-form-card {
   background-color: var(--bg-surface);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   padding: var(--spacing-6);
   border: 1px solid var(--color-neutral-200);
@@ -409,7 +409,7 @@ function onSubmit() {
   padding: var(--spacing-2);
   background-color: var(--bg-surface);
   border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--font-size-sm);
   transition: all var(--transition-fast);
@@ -428,6 +428,7 @@ function onSubmit() {
 .category-checkbox-item.checked {
   border-color: var(--color-primary-600);
   background-color: var(--color-primary-100);
+  color: var(--color-primary-900);
   font-weight: 600;
 }
 
@@ -527,6 +528,7 @@ input:checked + .slider:before {
 .btn {
   padding: var(--spacing-3) var(--spacing-6);
   font-size: var(--font-size-base);
+  border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -540,13 +542,13 @@ input:checked + .slider:before {
 }
 
 .btn-outline:hover {
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-muted);
   color: var(--text-primary);
 }
 
 .btn-primary {
   background-color: var(--color-primary-600);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .btn-primary:hover:not(:disabled) {
