@@ -13,6 +13,7 @@ import { useContactos } from '@/composables/useContactos'
 describe('useContactos', () => {
   beforeEach(() => {
     mockRef.actual.reiniciar()
+    localStorage.clear()
   })
 
   describe('registrarContacto', () => {
@@ -41,6 +42,55 @@ describe('useContactos', () => {
       mockRef.actual.supabase.rpc.mockResolvedValueOnce({ data: null, error: { message: 'x' } })
       const { registrarContacto } = useContactos()
       await expect(registrarContacto('prod-1')).resolves.toBeUndefined()
+    })
+
+    it('omite el RPC si ya se registró ese productor hace menos de 60 s', async () => {
+      const { registrarContacto } = useContactos()
+
+      await registrarContacto('prod-1')
+      expect(mockRef.actual.supabase.rpc).toHaveBeenCalledTimes(1)
+
+      await registrarContacto('prod-1')
+      expect(mockRef.actual.supabase.rpc).toHaveBeenCalledTimes(1)
+    })
+
+    it('el debounce es por productor: otro id sí registra', async () => {
+      const { registrarContacto } = useContactos()
+
+      await registrarContacto('prod-1')
+      await registrarContacto('prod-2')
+
+      expect(mockRef.actual.supabase.rpc).toHaveBeenCalledTimes(2)
+      expect(mockRef.actual.supabase.rpc).toHaveBeenLastCalledWith('registrar_contacto', {
+        p_productor_id: 'prod-2',
+      })
+    })
+
+    it('vuelve a registrar cuando la marca anterior tiene más de 60 s', async () => {
+      localStorage.setItem('contacto_ultimo_prod-1', String(Date.now() - 61_000))
+
+      const { registrarContacto } = useContactos()
+      await registrarContacto('prod-1')
+
+      expect(mockRef.actual.supabase.rpc).toHaveBeenCalledTimes(1)
+    })
+
+    it('registra igual si localStorage no está disponible', async () => {
+      const original = Object.getOwnPropertyDescriptor(window, 'localStorage')
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        get() {
+          throw new Error('acceso denegado')
+        },
+      })
+
+      try {
+        const { registrarContacto } = useContactos()
+        await expect(registrarContacto('prod-1')).resolves.toBeUndefined()
+        expect(mockRef.actual.supabase.rpc).toHaveBeenCalledTimes(1)
+      } finally {
+        Object.defineProperty(window, 'localStorage', original)
+      }
     })
   })
 
