@@ -2,9 +2,11 @@
   ProducerTable.vue - Tabla de datos para listar productores en el panel de administración.
 -->
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getPublicImageUrl } from '@/lib/supabase'
 import { colorDeCategoria } from '@/utils/categoriaColor'
+import { usePaginacion } from '@/composables/usePaginacion'
+import Pagination from '@/components/common/Pagination.vue'
 
 const props = defineProps({
   /** Lista de productores para la tabla */
@@ -37,6 +39,13 @@ const filteredProductores = computed(() => {
     return negocio.includes(search) || contacto.includes(search) || canton.includes(search)
   })
 })
+
+// La paginación cuelga del resultado ya filtrado: el buscador local sigue
+// viendo la lista completa que trajo el panel.
+const { page, totalPages, pageItems, irAPagina, resetear } = usePaginacion(filteredProductores, 15)
+
+// Al escribir en el buscador, los resultados cambian: volver a la página 1
+watch(searchFilter, resetear)
 
 /** Total de contactos por WhatsApp de un productor (0 si no tiene) */
 function contactosDe(id) {
@@ -72,7 +81,7 @@ function contactosDe(id) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="p in filteredProductores" :key="p.id">
+          <tr v-for="p in pageItems" :key="p.id">
             <!-- Imagen -->
             <td>
               <div class="thumbnail-container">
@@ -160,6 +169,14 @@ function contactosDe(id) {
         <p class="empty-title">No se encontraron productores</p>
         <p class="empty-desc">Prueba cambiando tu búsqueda o agrega uno nuevo.</p>
       </div>
+    </div>
+
+    <!-- Paginación de la tabla -->
+    <div v-if="totalPages > 1" class="table-footer">
+      <span class="table-count">
+        {{ filteredProductores.length }} productores · página {{ page }} de {{ totalPages }}
+      </span>
+      <Pagination :page="page" :total-pages="totalPages" @ir="irAPagina" />
     </div>
   </div>
 </template>
@@ -360,5 +377,26 @@ function contactosDe(id) {
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
+}
+
+.table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--color-neutral-200);
+}
+
+.table-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* Dentro de la tabla el margen superior de los controles sobra. */
+.table-footer :deep(.pagination) {
+  margin-top: 0;
 }
 </style>
