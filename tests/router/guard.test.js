@@ -86,4 +86,53 @@ describe('guardiaAutenticacion', () => {
     await guardiaAutenticacion(ruta({ name: 'home', fullPath: '/', title: 'Inicio' }))
     expect(document.title).toBe('Inicio')
   })
+
+  describe('requiresSuperadmin', () => {
+    /** Ruta admin protegida que además exige superadmin. */
+    function rutaSuperadmin() {
+      return {
+        name: 'admins',
+        fullPath: '/admin/administradores',
+        meta: {},
+        matched: [
+          { meta: { requiresAuth: true } },
+          { meta: { title: 'Administradores', requiresSuperadmin: true } },
+        ],
+      }
+    }
+
+    it('con sesión de superadmin, permite el paso', async () => {
+      conSesion(true)
+      mockRef.actual.responder('admin_profiles', { data: { rol: 'superadmin' }, error: null })
+
+      const destino = await guardiaAutenticacion(rutaSuperadmin())
+
+      const [consulta] = mockRef.actual.consultasDe('admin_profiles')
+      expect(consulta.eq).toHaveBeenCalledWith('id', 'u1')
+      expect(destino).toBe(true)
+    })
+
+    it('con sesión de editor, redirige al panel', async () => {
+      conSesion(true)
+      mockRef.actual.responder('admin_profiles', { data: { rol: 'editor' }, error: null })
+
+      const destino = await guardiaAutenticacion(rutaSuperadmin())
+      expect(destino).toEqual({ name: 'admin-dashboard' })
+    })
+
+    it('si la consulta del rol falla, redirige al panel (no se asume el permiso)', async () => {
+      conSesion(true)
+      mockRef.actual.responder('admin_profiles', { data: null, error: { message: 'denegado' } })
+
+      const destino = await guardiaAutenticacion(rutaSuperadmin())
+      expect(destino).toEqual({ name: 'admin-dashboard' })
+    })
+
+    it('sin sesión, una ruta de superadmin manda a login, no al panel', async () => {
+      conSesion(false)
+      const destino = await guardiaAutenticacion(rutaSuperadmin())
+      expect(destino).toMatchObject({ name: 'login' })
+      expect(mockRef.actual.consultasDe('admin_profiles')).toHaveLength(0)
+    })
+  })
 })

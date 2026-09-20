@@ -7,6 +7,29 @@
 import { supabase } from '@/lib/supabase'
 
 /**
+ * Consulta el rol del usuario directamente contra Supabase.
+ *
+ * No usa useAuth() a propósito: el guardia debe poder probarse sin montar
+ * Vue ni depender del orden de carga de los composables.
+ *
+ * @param {string} userId
+ * @returns {Promise<boolean>} false ante cualquier fallo (no se asume el permiso)
+ */
+async function esSuperadmin(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('admin_profiles')
+      .select('rol')
+      .eq('id', userId)
+      .maybeSingle()
+    if (error) return false
+    return data?.rol === 'superadmin'
+  } catch {
+    return false
+  }
+}
+
+/**
  * @param {import('vue-router').RouteLocationNormalized} to
  * @returns {Promise<true | import('vue-router').RouteLocationRaw>}
  */
@@ -23,6 +46,17 @@ export async function guardiaAutenticacion(to) {
 
   if (requiereAuth && !autenticado) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  // requiresSuperadmin: segunda barrera del lado del cliente. La de verdad
+  // son las políticas RLS de admin_profiles (migración 003); esto solo evita
+  // mostrar una pantalla que no serviría de nada.
+  const requiereSuperadmin = to.matched.some((r) => r.meta?.requiresSuperadmin)
+
+  if (requiereSuperadmin && autenticado) {
+    if (!(await esSuperadmin(session.user.id))) {
+      return { name: 'admin-dashboard' }
+    }
   }
 
   if (to.name === 'login' && autenticado) {
