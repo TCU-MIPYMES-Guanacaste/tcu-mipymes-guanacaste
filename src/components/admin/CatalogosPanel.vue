@@ -8,6 +8,7 @@
 import { onMounted, ref } from 'vue'
 import { useCatalogos } from '@/composables/useCatalogos'
 import { useToast } from '@/composables/useToast'
+import SelectorIconoCategoria from './SelectorIconoCategoria.vue'
 
 const {
   cantones,
@@ -26,12 +27,14 @@ const { mostrarExito, mostrarError } = useToast()
 
 // Formularios de alta
 const nuevaCategoria = ref('')
+const nuevoIcono = ref('')
 const nuevoCanton = ref('')
 
-// Renombrado en línea: id de la fila en edición y el texto provisional
+// Renombrado en línea: id de la fila en edición y el texto/ícono provisional
 const categoriaEditandoId = ref(null)
 const cantonEditandoId = ref(null)
 const nombreEditado = ref('')
+const iconoEditado = ref('')
 
 onMounted(() => {
   fetchCategorias()
@@ -40,12 +43,13 @@ onMounted(() => {
 
 // --- Categorías ---
 async function agregarCategoria() {
-  const creada = await crearCategoria(nuevaCategoria.value)
+  const creada = await crearCategoria(nuevaCategoria.value, nuevoIcono.value)
   if (!creada) {
     mostrarError(error.value || 'No se pudo crear la categoría.')
     return
   }
   nuevaCategoria.value = ''
+  nuevoIcono.value = ''
   mostrarExito('Categoría creada.')
 }
 
@@ -53,10 +57,11 @@ function empezarEdicionCategoria(categoria) {
   cantonEditandoId.value = null
   categoriaEditandoId.value = categoria.id
   nombreEditado.value = categoria.nombre
+  iconoEditado.value = categoria.icono || ''
 }
 
 async function guardarCategoria(id) {
-  const actualizada = await renombrarCategoria(id, nombreEditado.value)
+  const actualizada = await renombrarCategoria(id, nombreEditado.value, iconoEditado.value)
   if (!actualizada) {
     mostrarError(error.value || 'No se pudo renombrar la categoría.')
     return
@@ -120,6 +125,7 @@ function cancelarEdicion() {
   categoriaEditandoId.value = null
   cantonEditandoId.value = null
   nombreEditado.value = ''
+  iconoEditado.value = ''
 }
 </script>
 
@@ -137,20 +143,26 @@ function cancelarEdicion() {
       <div class="catalogo-card">
         <h3 class="catalogo-card-title">Categorías de alimentos</h3>
 
-        <form class="catalogo-alta" @submit.prevent="agregarCategoria">
-          <input
-            v-model="nuevaCategoria"
-            type="text"
-            placeholder="Nombre de la categoría"
-            aria-label="Nombre de la categoría"
-          />
-          <button type="submit" class="btn-alta">Agregar</button>
+        <form class="catalogo-alta catalogo-alta-categoria" @submit.prevent="agregarCategoria">
+          <SelectorIconoCategoria v-model="nuevoIcono" />
+          <div class="catalogo-alta-fila">
+            <input
+              v-model="nuevaCategoria"
+              type="text"
+              placeholder="Nombre de la categoría"
+              aria-label="Nombre de la categoría"
+            />
+            <button type="submit" class="btn-alta">Agregar</button>
+          </div>
         </form>
 
         <ul class="catalogo-lista">
           <li v-for="cat in categorias" :key="cat.id" class="catalogo-fila">
             <template v-if="categoriaEditandoId === cat.id">
-              <input v-model="nombreEditado" type="text" aria-label="Nuevo nombre" />
+              <div class="catalogo-edicion-categoria">
+                <SelectorIconoCategoria v-model="iconoEditado" />
+                <input v-model="nombreEditado" type="text" aria-label="Nuevo nombre" />
+              </div>
               <div class="catalogo-acciones">
                 <button type="button" class="btn-action btn-edit" @click="guardarCategoria(cat.id)">
                   Guardar
@@ -162,7 +174,7 @@ function cancelarEdicion() {
             </template>
             <template v-else>
               <span class="catalogo-nombre">
-                <span class="catalogo-icono">🌾</span>
+                <span class="catalogo-icono">{{ cat.icono || '🏷️' }}</span>
                 {{ cat.nombre }}
               </span>
               <div class="catalogo-acciones">
@@ -327,6 +339,29 @@ function cancelarEdicion() {
   border-radius: var(--radius-md);
 }
 
+/* La de categorías lleva además el selector de ícono, en su propia fila. */
+.catalogo-alta-categoria {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.catalogo-alta-fila {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.catalogo-alta-fila input {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalogo-edicion-categoria {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  flex: 1;
+}
+
 .btn-alta {
   flex-shrink: 0;
   padding: var(--spacing-2) var(--spacing-4);
@@ -397,13 +432,17 @@ function cancelarEdicion() {
 }
 
 .catalogo-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
   font-size: var(--font-size-sm);
   color: var(--text-primary);
   font-weight: 500;
 }
 
 .catalogo-icono {
-  margin-right: var(--spacing-1);
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .catalogo-acciones {
