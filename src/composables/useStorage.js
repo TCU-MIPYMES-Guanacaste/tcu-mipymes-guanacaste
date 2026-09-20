@@ -6,7 +6,8 @@
  */
 import { supabase, BUCKET_IMAGENES } from '@/lib/supabase'
 
-const CARPETA_PRODUCTORES = 'productores'
+// Carpeta por defecto dentro del bucket; los productos destacados usan 'productos'.
+const CARPETA_POR_DEFECTO = 'productores'
 
 // Extensión por tipo MIME; el nombre del archivo no es confiable (puede no tener punto)
 const EXTENSION_POR_TIPO = {
@@ -31,13 +32,14 @@ export function useStorage() {
    * Sube una imagen con un nombre único y devuelve su ruta relativa.
    *
    * @param {File} file
-   * @returns {Promise<string>} Ruta dentro del bucket (ej: 'productores/1700000000-ab12cd.webp')
+   * @param {string} [carpeta] - Carpeta dentro del bucket ('productores' por defecto)
+   * @returns {Promise<string>} Ruta dentro del bucket (ej: 'productos/1700000000-ab12cd.webp')
    * @throws Error de Supabase si la subida falla
    */
-  async function uploadImage(file) {
+  async function uploadImage(file, carpeta = CARPETA_POR_DEFECTO) {
     const extension = extensionDesdeTipo(file)
     const nombreUnico = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`
-    const ruta = `${CARPETA_PRODUCTORES}/${nombreUnico}`
+    const ruta = `${carpeta}/${nombreUnico}`
 
     const { error } = await supabase.storage
       .from(BUCKET_IMAGENES)
