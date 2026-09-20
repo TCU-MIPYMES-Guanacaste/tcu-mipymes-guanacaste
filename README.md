@@ -44,30 +44,34 @@ Solo se hace **una vez** por proyecto.
 3. **SQL Editor** → **New query** → pegue el contenido completo de
    `database/migrations/001_initial_schema.sql` → **Run**.
 4. Repita con `database/migrations/002_seguridad_admin_y_contactos.sql`.
-5. Repita con `database/seeds/001_seed_cantones_categorias.sql` (carga los 11
+5. Repita con `database/migrations/003_roles_y_seguridad_admin.sql` (roles
+   `superadmin` / `editor` y cierre del permiso de escritura sobre
+   `admin_profiles`).
+6. Repita con `database/seeds/001_seed_cantones_categorias.sql` (carga los 11
    cantones y 9 categorías iniciales).
-6. **Storage** → **New bucket** → nombre exacto `product-images` → active
+7. **Storage** → **New bucket** → nombre exacto `product-images` → active
    **Public bucket** → **Save**.
-7. **Authentication → Providers → Email** → desactive
+8. **Authentication → Providers → Email** → desactive
    **"Allow new users to sign up"** → **Save**.
    > Sin esto, cualquier persona podría crear una cuenta. Con la migración 002
    > no podría modificar nada, pero es mejor cerrar la puerta.
-8. **Authentication → URL Configuration**:
+9. **Authentication → URL Configuration**:
    - **Site URL:** la dirección pública del sitio (por ejemplo
      `https://mipymes-guanacaste.vercel.app`). Si aún no la tiene, ponga
      `http://localhost:5173` y cámbiela después de publicar.
    - **Redirect URLs** → **Add URL**, agregue estas dos:
      - `http://localhost:5173/restablecer-contrasena`
      - `https://SU-DOMINIO.vercel.app/restablecer-contrasena`
-9. **Project Settings → API** → copie **Project URL** y **anon public** key.
-   Los necesitará en los pasos 4 y 5.
+10. **Project Settings → API** → copie **Project URL** y **anon public** key.
+    Los necesitará en los pasos 4 y 5.
 
 ### Proyecto existente (ya tiene la migración 001)
 
 Si el proyecto de Supabase ya estaba funcionando con la Fase 1:
 
-1. Ejecute **solo** `database/migrations/002_seguridad_admin_y_contactos.sql`
-   en el SQL Editor. Es seguro ejecutarla más de una vez.
+1. Ejecute `database/migrations/002_seguridad_admin_y_contactos.sql` y luego
+   `database/migrations/003_roles_y_seguridad_admin.sql` en el SQL Editor, en
+   ese orden. Ambas son seguras de ejecutar más de una vez.
 2. Las políticas de Storage creadas a mano desde el panel (Storage → Policies)
    **no** se eliminan automáticamente y dejarían escribir a cualquier usuario
    autenticado. Revíselas con:
@@ -110,8 +114,18 @@ en la **lista blanca** `admin_profiles`.
    JOIN auth.users u ON u.id = p.id;
    ```
 
-Para cada administrador adicional, repita los pasos 1-3 con `rol = 'editor'`.
-(Hoy ambos roles tienen los mismos permisos; la distinción queda para el futuro.)
+El **primer** administrador debe tener `rol = 'superadmin'`: es el único rol
+que puede dar de alta o revocar a otros administradores desde la aplicación
+(**Administración → Administradores**). Los demás se invitan desde ahí, sin
+volver a tocar SQL.
+
+Diferencia entre roles:
+
+| | `superadmin` | `editor` |
+|---|---|---|
+| Productores y productos destacados | Sí | Sí |
+| Categorías y cantones | Sí | Sí |
+| Invitar y revocar administradores | Sí | No |
 
 ## 4. Ejecutar en la computadora
 
