@@ -97,11 +97,15 @@ export function useAdmins() {
    */
   function eliminarAdmin(id) {
     return ejecutar(async () => {
-      const { error: deleteError } = await supabase
+      const { data, error: deleteError } = await supabase
         .from('admin_profiles')
         .delete()
         .eq('id', id)
+        .select()
       if (deleteError) throw deleteError
+      if (!data || data.length === 0) {
+        throw new Error('No se pudo eliminar: el administrador ya no existe o no tiene permiso.')
+      }
 
       admins.value = admins.value.filter((a) => a.id !== id)
       return true

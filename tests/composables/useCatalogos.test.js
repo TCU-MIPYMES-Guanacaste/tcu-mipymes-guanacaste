@@ -88,7 +88,7 @@ describe('useCatalogos', () => {
 
     it('elimina y quita la fila cuando no está en uso', async () => {
       mockRef.actual.responder('productor_categorias', { data: null, count: 0, error: null })
-      mockRef.actual.responder('categorias', { data: null, error: null })
+      mockRef.actual.responder('categorias', { data: [{ id: 'c1' }], error: null })
       const { eliminarCategoria, categorias } = useCatalogos()
       categorias.value = [{ id: 'c1', nombre: 'Verduras' }, { id: 'c2', nombre: 'Miel' }]
 
@@ -99,6 +99,19 @@ describe('useCatalogos', () => {
       expect(consulta.delete).toHaveBeenCalled()
       expect(consulta.eq).toHaveBeenCalledWith('id', 'c1')
       expect(categorias.value).toEqual([{ id: 'c2', nombre: 'Miel' }])
+    })
+
+    it('devuelve false y conserva la fila si RLS filtra el borrado (0 filas)', async () => {
+      mockRef.actual.responder('productor_categorias', { data: null, count: 0, error: null })
+      mockRef.actual.responder('categorias', { data: [], error: null })
+      const { eliminarCategoria, categorias, error } = useCatalogos()
+      categorias.value = [{ id: 'c1', nombre: 'Verduras' }]
+
+      const ok = await eliminarCategoria('c1')
+
+      expect(ok).toBe(false)
+      expect(error.value).toBe('No se pudo eliminar: la categoría ya no existe o no tiene permiso.')
+      expect(categorias.value).toEqual([{ id: 'c1', nombre: 'Verduras' }])
     })
   })
 
@@ -152,7 +165,7 @@ describe('useCatalogos', () => {
 
     it('elimina y quita la fila cuando no está en uso', async () => {
       mockRef.actual.responder('productores', { data: null, count: 0, error: null })
-      mockRef.actual.responder('cantones', { data: null, error: null })
+      mockRef.actual.responder('cantones', { data: [{ id: 'k1' }], error: null })
       const { eliminarCanton, cantones } = useCatalogos()
       cantones.value = [{ id: 'k1', nombre: 'Nicoya' }]
 
@@ -160,6 +173,19 @@ describe('useCatalogos', () => {
 
       expect(ok).toBe(true)
       expect(cantones.value).toEqual([])
+    })
+
+    it('devuelve false y conserva la fila si RLS filtra el borrado (0 filas)', async () => {
+      mockRef.actual.responder('productores', { data: null, count: 0, error: null })
+      mockRef.actual.responder('cantones', { data: [], error: null })
+      const { eliminarCanton, cantones, error } = useCatalogos()
+      cantones.value = [{ id: 'k1', nombre: 'Nicoya' }]
+
+      const ok = await eliminarCanton('k1')
+
+      expect(ok).toBe(false)
+      expect(error.value).toBe('No se pudo eliminar: el cantón ya no existe o no tiene permiso.')
+      expect(cantones.value).toEqual([{ id: 'k1', nombre: 'Nicoya' }])
     })
   })
 })

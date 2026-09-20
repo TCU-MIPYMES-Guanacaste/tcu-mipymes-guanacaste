@@ -153,8 +153,15 @@ export function useCatalogos() {
         throw new Error(`No se puede eliminar: ${enUso} productores usan esta categoría.`)
       }
 
-      const { error: deleteError } = await supabase.from('categorias').delete().eq('id', id)
+      const { data, error: deleteError } = await supabase
+        .from('categorias')
+        .delete()
+        .eq('id', id)
+        .select()
       if (deleteError) throw deleteError
+      if (!data || data.length === 0) {
+        throw new Error('No se pudo eliminar: la categoría ya no existe o no tiene permiso.')
+      }
 
       categorias.value = categorias.value.filter((c) => c.id !== id)
       return true
@@ -223,8 +230,15 @@ export function useCatalogos() {
         throw new Error(`No se puede eliminar: ${enUso} productores están en este cantón.`)
       }
 
-      const { error: deleteError } = await supabase.from('cantones').delete().eq('id', id)
+      const { data, error: deleteError } = await supabase
+        .from('cantones')
+        .delete()
+        .eq('id', id)
+        .select()
       if (deleteError) throw deleteError
+      if (!data || data.length === 0) {
+        throw new Error('No se pudo eliminar: el cantón ya no existe o no tiene permiso.')
+      }
 
       cantones.value = cantones.value.filter((c) => c.id !== id)
       return true
