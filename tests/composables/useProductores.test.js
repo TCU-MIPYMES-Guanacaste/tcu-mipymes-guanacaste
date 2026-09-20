@@ -252,7 +252,7 @@ describe('useProductores', () => {
   describe('deleteProductor', () => {
     it('borra el registro y luego su foto', async () => {
       mockRef.actual.responder('productores', { data: { foto_url: 'productores/x.webp' }, error: null })
-      mockRef.actual.responder('productores', { data: null, error: null })
+      mockRef.actual.responder('productores', { data: [{ id: 'p1' }], error: null })
       const { deleteProductor } = useProductores()
       const ok = await deleteProductor('p1')
 
@@ -262,7 +262,7 @@ describe('useProductores', () => {
 
     it('quita el productor de la lista local', async () => {
       mockRef.actual.responder('productores', { data: { foto_url: null }, error: null })
-      mockRef.actual.responder('productores', { data: null, error: null })
+      mockRef.actual.responder('productores', { data: [{ id: 'p1' }], error: null })
       const { deleteProductor, productores } = useProductores()
       productores.value = [{ id: 'p1' }, { id: 'p2' }]
       await deleteProductor('p1')
@@ -278,6 +278,20 @@ describe('useProductores', () => {
       expect(ok).toBe(false)
       expect(error.value).toBe('no')
       expect(storageMock.deleteImage).not.toHaveBeenCalled()
+    })
+
+    it('devuelve false y conserva la lista si RLS filtra la fila (0 filas borradas)', async () => {
+      mockRef.actual.responder('productores', { data: { foto_url: 'productores/x.webp' }, error: null })
+      mockRef.actual.responder('productores', { data: [], error: null })
+      const { deleteProductor, productores, error } = useProductores()
+      productores.value = [{ id: 'p1' }]
+
+      const ok = await deleteProductor('p1')
+
+      expect(ok).toBe(false)
+      expect(error.value).toBe('No se pudo eliminar: el productor ya no existe o no tiene permiso.')
+      expect(storageMock.deleteImage).not.toHaveBeenCalled()
+      expect(productores.value).toEqual([{ id: 'p1' }])
     })
   })
 })
