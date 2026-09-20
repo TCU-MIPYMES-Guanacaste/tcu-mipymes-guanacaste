@@ -87,16 +87,20 @@ function clearFilters() {
 <style scoped>
 .producer-filters {
   padding: 1.25rem;
-  background: var(--color-white);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: var(--bg-surface);
+  border: 1px solid var(--color-neutral-200);
+  border-left: 4px solid var(--color-primary-600);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 2px 8px rgba(43, 32, 22, 0.05);
 }
 
 .filters-title {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin: 0 0 1rem;
-  color: var(--color-text);
+  color: var(--text-secondary);
 }
 
 .filter-group {
@@ -106,26 +110,27 @@ function clearFilters() {
 .filter-label {
   display: block;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.35rem;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
 }
 
 .filter-select {
   width: 100%;
   padding: 0.6rem 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-family: inherit;
-  background-color: var(--color-white);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: border-color 0.2s;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-600);
 }
 
 .filter-clear {
@@ -133,16 +138,16 @@ function clearFilters() {
   padding: 0.5rem;
   margin-top: 0.5rem;
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  color: var(--color-text-muted);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .filter-clear:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-primary-600);
+  color: var(--color-primary-600);
 }
 </style>

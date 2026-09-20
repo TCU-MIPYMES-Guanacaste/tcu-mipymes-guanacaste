@@ -79,16 +79,19 @@ function clearSearch() {
 .search-input {
   width: 100%;
   padding: 0.75rem 2.5rem 0.75rem 2.5rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 3px rgba(140, 59, 38, 0.15);
 }
 
 .search-clear {
@@ -97,17 +100,17 @@ function clearSearch() {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   font-size: 1rem;
   padding: 0.25rem;
 }
 
 .search-button {
   padding: 0.75rem 1.5rem;
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  background-color: var(--color-primary-600);
+  color: var(--text-inverse);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-full);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
@@ -115,6 +118,6 @@ function clearSearch() {
 }
 
 .search-button:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-primary-700);
 }
 </style>
