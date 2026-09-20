@@ -162,7 +162,7 @@ describe('useProductosDestacados', () => {
   describe('eliminarProducto', () => {
     it('borra la foto y quita el producto de la lista', async () => {
       mockRef.actual.responder('productos_destacados', { data: { foto_url: 'productos/v.webp' }, error: null })
-      mockRef.actual.responder('productos_destacados', { data: null, error: null })
+      mockRef.actual.responder('productos_destacados', { data: [{ id: 'pd1' }], error: null })
       const { eliminarProducto, productos } = useProductosDestacados()
       productos.value = [{ id: 'pd1' }, { id: 'pd2' }]
 
@@ -180,6 +180,19 @@ describe('useProductosDestacados', () => {
 
       const ok = await eliminarProducto('pd1')
       expect(ok).toBe(false)
+      expect(storageMock.deleteImage).not.toHaveBeenCalled()
+      expect(productos.value).toEqual([{ id: 'pd1' }])
+    })
+
+    it('devuelve false y no toca la foto si RLS filtra el borrado (0 filas)', async () => {
+      mockRef.actual.responder('productos_destacados', { data: { foto_url: 'productos/v.webp' }, error: null })
+      mockRef.actual.responder('productos_destacados', { data: [], error: null })
+      const { eliminarProducto, productos, error } = useProductosDestacados()
+      productos.value = [{ id: 'pd1' }]
+
+      const ok = await eliminarProducto('pd1')
+      expect(ok).toBe(false)
+      expect(error.value).toBe('No se pudo eliminar: el producto ya no existe o no tiene permiso.')
       expect(storageMock.deleteImage).not.toHaveBeenCalled()
       expect(productos.value).toEqual([{ id: 'pd1' }])
     })

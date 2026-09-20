@@ -100,7 +100,7 @@ describe('useAdmins', () => {
 
   describe('eliminarAdmin', () => {
     it('borra por id y quita la fila de la lista', async () => {
-      mockRef.actual.responder('admin_profiles', { data: null, error: null })
+      mockRef.actual.responder('admin_profiles', { data: [{ id: 'u1' }], error: null })
       const { eliminarAdmin, admins } = useAdmins()
       admins.value = [{ id: 'u1' }, { id: 'u2' }]
 
@@ -122,6 +122,18 @@ describe('useAdmins', () => {
 
       expect(ok).toBe(false)
       expect(error.value).toBe('denegado')
+      expect(admins.value).toEqual([{ id: 'u1' }])
+    })
+
+    it('devuelve false y conserva la lista si RLS filtra la fila (0 filas borradas)', async () => {
+      mockRef.actual.responder('admin_profiles', { data: [], error: null })
+      const { eliminarAdmin, admins, error } = useAdmins()
+      admins.value = [{ id: 'u1' }]
+
+      const ok = await eliminarAdmin('u1')
+
+      expect(ok).toBe(false)
+      expect(error.value).toBe('No se pudo eliminar: el administrador ya no existe o no tiene permiso.')
       expect(admins.value).toEqual([{ id: 'u1' }])
     })
   })

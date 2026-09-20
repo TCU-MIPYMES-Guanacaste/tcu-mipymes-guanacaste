@@ -179,11 +179,15 @@ export function useProductosDestacados() {
     return ejecutar(async () => {
       const foto = await obtenerFotoActual(id)
 
-      const { error: deleteError } = await supabase
+      const { data, error: deleteError } = await supabase
         .from('productos_destacados')
         .delete()
         .eq('id', id)
+        .select()
       if (deleteError) throw deleteError
+      if (!data || data.length === 0) {
+        throw new Error('No se pudo eliminar: el producto ya no existe o no tiene permiso.')
+      }
 
       await deleteImage(foto)
 
