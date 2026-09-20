@@ -6,18 +6,29 @@
   botón de WhatsApp para comunicación directa.
 -->
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProductores } from '@/composables/useProductores'
+import { useProductosDestacados } from '@/composables/useProductosDestacados'
 import { getPublicImageUrl } from '@/lib/supabase'
 import { formatearTelefono } from '@/utils/telefono'
 import { colorDeCategoria } from '@/utils/categoriaColor'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import WhatsAppButton from '@/components/producers/WhatsAppButton.vue'
+import ProductosDestacadosGrid from '@/components/producers/ProductosDestacadosGrid.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { loading, error, fetchProductorById } = useProductores()
+
+// Los productos se cargan aparte del productor: así el detalle se muestra
+// aunque esta consulta falle, y useProductores no necesita saber de ellos.
+const { productos, fetchProductos } = useProductosDestacados()
+
+/** Al público solo se le muestran los productos marcados como disponibles. */
+const productosDisponibles = computed(() =>
+  productos.value.filter((p) => p.disponible)
+)
 
 // Datos del productor
 const producer = ref(null)
@@ -27,6 +38,7 @@ onMounted(async () => {
   const data = await fetchProductorById(route.params.id)
   if (data) {
     producer.value = data
+    fetchProductos(data.id)
   } else {
     // Si no se encontró el productor, redirigir al inicio
     router.push({ name: 'home' })
@@ -112,6 +124,12 @@ onMounted(async () => {
           />
         </div>
       </div>
+
+      <!-- Productos destacados: solo si hay alguno disponible al público -->
+      <ProductosDestacadosGrid
+        v-if="productosDisponibles.length"
+        :productos="productosDisponibles"
+      />
     </article>
   </div>
 </template>
