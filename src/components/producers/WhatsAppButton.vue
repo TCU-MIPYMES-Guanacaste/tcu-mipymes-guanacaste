@@ -73,7 +73,7 @@ function handleClick() {
   background-color: #25d366;
   color: #ffffff;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: var(--radius-full);
   font-weight: 600;
   font-size: 1rem;
   transition: background-color 0.2s, transform 0.1s;
