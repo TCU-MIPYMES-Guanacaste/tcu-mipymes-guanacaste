@@ -115,6 +115,22 @@
   /* --- Layout --- */
   --max-width: 1280px;
   --header-height: 4rem;
+
+  /* --- Alias de compatibilidad ---
+     Varios componentes usan estos nombres cortos. Se mapean aquí al
+     sistema de tokens para no editar 70 líneas en 14 archivos. El
+     rediseño futuro solo tiene que redefinir estos alias. */
+  --color-primary:       var(--color-primary-600);
+  --color-primary-dark:  var(--color-primary-700);
+  --color-primary-light: var(--color-primary-100);
+  --color-white:         #ffffff;
+  --color-surface:       var(--bg-surface);
+  --color-surface-dark:  var(--color-neutral-800);
+  --color-border:        var(--color-neutral-200);
+  --color-text:          var(--text-primary);
+  --color-text-muted:    var(--text-secondary);
+  --color-text-light:    var(--color-neutral-100);
+  --color-error-light:   #fef2f2;
 }
 
 /* ---- Estilos Base ---- */
