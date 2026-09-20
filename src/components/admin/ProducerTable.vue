@@ -167,7 +167,7 @@ function contactosDe(id) {
 <style scoped>
 .table-container-card {
   background-color: var(--bg-surface);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-neutral-200);
   overflow: hidden;
