@@ -1,0 +1,10 @@
+# Configuración de la CLI de Supabase para este proyecto.
+# Solo declara lo necesario para desplegar la Edge Function; el resto de la
+# configuración del proyecto se administra desde el panel de supabase.com.
+
+project_id = "mipymes-guanacaste"
+
+[functions.invitar-admin]
+# El proyecto no usa TypeScript, así que hay que declarar el .js a mano.
+entrypoint = "./functions/invitar-admin/index.js"
+verify_jwt = true

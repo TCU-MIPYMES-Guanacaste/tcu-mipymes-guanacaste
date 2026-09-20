@@ -18,12 +18,13 @@ Costo de infraestructura: **$0/mes** (Supabase Free + Vercel Hobby).
 1. [Requisitos](#1-requisitos)
 2. [Configurar Supabase](#2-configurar-supabase)
 3. [Crear el primer administrador](#3-crear-el-primer-administrador)
-4. [Ejecutar en la computadora](#4-ejecutar-en-la-computadora)
-5. [Publicar en Vercel](#5-publicar-en-vercel)
-6. [Tareas de mantenimiento](#6-tareas-de-mantenimiento)
-7. [Límites del plan gratuito](#7-límites-del-plan-gratuito)
-8. [Problemas frecuentes](#8-problemas-frecuentes)
-9. [Estructura del código](#9-estructura-del-código)
+4. [Invitaciones de administradores (Edge Function)](#4-invitaciones-de-administradores-edge-function)
+5. [Ejecutar en la computadora](#5-ejecutar-en-la-computadora)
+6. [Publicar en Vercel](#6-publicar-en-vercel)
+7. [Tareas de mantenimiento](#7-tareas-de-mantenimiento)
+8. [Límites del plan gratuito](#8-límites-del-plan-gratuito)
+9. [Problemas frecuentes](#9-problemas-frecuentes)
+10. [Estructura del código](#10-estructura-del-código)
 
 ---
 
@@ -63,7 +64,7 @@ Solo se hace **una vez** por proyecto.
      - `http://localhost:5173/restablecer-contrasena`
      - `https://SU-DOMINIO.vercel.app/restablecer-contrasena`
 10. **Project Settings → API** → copie **Project URL** y **anon public** key.
-    Los necesitará en los pasos 4 y 5.
+    Los necesitará en los pasos 5 y 6.
 
 ### Proyecto existente (ya tiene la migración 001)
 
@@ -127,7 +128,56 @@ Diferencia entre roles:
 | Categorías y cantones | Sí | Sí |
 | Invitar y revocar administradores | Sí | No |
 
-## 4. Ejecutar en la computadora
+## 4. Invitaciones de administradores (Edge Function)
+
+La pantalla **Administración → Administradores** (solo visible para un
+superadmin) invita a gente nueva por correo. Eso necesita dos cosas que se
+configuran una sola vez:
+
+### 4.1 Envío de correo
+
+**Authentication → Emails** (o **Project Settings → Authentication → SMTP
+Settings**). El servidor de prueba de Supabase funciona para empezar, pero
+tiene un límite de pocos correos por hora y solo entrega a direcciones del
+equipo. Para uso real, configure un SMTP propio (por ejemplo el institucional
+de la UCR, o un servicio gratuito como Resend o Brevo).
+
+Sin esto, la invitación falla con "No se pudo enviar la invitación. Revise la
+configuración de correo del proyecto."
+
+### 4.2 Desplegar la función
+
+Requiere la CLI de Supabase y el *Reference ID* del proyecto
+(**Project Settings → General**):
+
+```bash
+npx supabase login
+npx supabase link --project-ref SU-REFERENCE-ID
+npx supabase functions deploy invitar-admin
+```
+
+Debe repetirse **solo** si cambia el archivo
+`supabase/functions/invitar-admin/index.js`. No hace falta configurar ninguna
+clave: Supabase inyecta `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` dentro de
+la función, y esa clave nunca llega al navegador.
+
+### 4.3 Qué hace y qué no
+
+- Crea la cuenta en Supabase Auth, envía el correo de invitación (la persona
+  elige su contraseña desde el enlace) y agrega la fila en `admin_profiles`.
+- Verifica el rol de quien invita: si no es superadmin, responde 403 aunque la
+  petición venga de fuera de la aplicación.
+- **Revocar** un administrador borra su fila de `admin_profiles` y con eso
+  pierde todo permiso, pero **no** elimina su cuenta de Supabase Auth. Si
+  quiere borrarla del todo: **Authentication → Users → Delete user**.
+
+> **Estado de este despliegue:** el código de la función y su configuración
+> (`supabase/functions/invitar-admin/index.js`, `supabase/config.toml`) ya
+> están en el repositorio, pero el despliegue (4.2) y la configuración de SMTP
+> (4.1) son pasos manuales contra el proyecto real de Supabase que quedan
+> pendientes de ejecutar.
+
+## 5. Ejecutar en la computadora
 
 ```bash
 git clone https://github.com/HeinnerV/tcu-mipymes-guanacaste.git
@@ -158,7 +208,7 @@ Otros comandos:
 | `npm run build` | Genera la versión de producción en `dist/` |
 | `npm run preview` | Sirve `dist/` localmente para revisarlo |
 
-## 5. Publicar en Vercel
+## 6. Publicar en Vercel
 
 1. En Vercel: **Add New → Project** → **Import** este repositorio de GitHub.
 2. Framework: se detecta **Vite** automáticamente. No cambie nada más.
@@ -175,7 +225,7 @@ El archivo `vercel.json` del repositorio hace que todas las rutas
 (`/productor/...`, `/admin`) carguen la aplicación; sin él, refrescar la
 página daría error 404.
 
-## 6. Tareas de mantenimiento
+## 7. Tareas de mantenimiento
 
 Todas se hacen desde **Supabase → SQL Editor**.
 
@@ -229,7 +279,7 @@ hay un enlace "¿Olvidó su contraseña?" que envía un correo de recuperación.
 Si prefiere hacerlo a mano: **Authentication → Users → (usuario) → Reset
 password**.
 
-## 7. Límites del plan gratuito
+## 8. Límites del plan gratuito
 
 | Recurso | Límite Free | Qué significa aquí |
 |---|---|---|
@@ -242,7 +292,7 @@ password**.
 Si el proyecto se pausa por inactividad, el sitio muestra un error de conexión
 hasta que alguien lo restaure desde el panel de Supabase.
 
-## 8. Problemas frecuentes
+## 9. Problemas frecuentes
 
 **Pantalla en blanco al abrir el sitio.**
 Faltan las variables de entorno. En local: revise `.env`. En Vercel:
@@ -268,9 +318,9 @@ Haga **Redeploy**.
 Su teléfono no es válido (no tiene 8 dígitos). Edítelo desde el panel.
 
 **El sitio muestra un mensaje de error al cargar los productores.**
-El proyecto de Supabase está pausado (sección 7) o la clave `anon` cambió.
+El proyecto de Supabase está pausado (sección 8) o la clave `anon` cambió.
 
-## 9. Estructura del código
+## 10. Estructura del código
 
 ```
 src/
@@ -285,6 +335,7 @@ src/
 │   ├── useStorage.js        Subir/eliminar imágenes del bucket
 │   ├── useCatalogos.js      Cantones y categorías
 │   ├── useContactos.js      Métrica de contactos por WhatsApp
+│   ├── useAdmins.js         Listar, invitar y revocar administradores (solo superadmin)
 │   └── useToast.js          Notificaciones de éxito/error
 ├── router/
 │   ├── index.js             Rutas (públicas, login, /admin con hijos)
@@ -298,9 +349,14 @@ database/
 ├── migrations/002_...sql    Lista blanca de admins, contactos, Storage
 └── seeds/001_...sql         Cantones y categorías iniciales
 
+supabase/
+└── functions/invitar-admin/ Edge Function que crea la cuenta e invita por correo
+
 tests/                       Pruebas con Vitest (npm test)
 docs/superpowers/            Especificación y plan de la refactorización
 ```
 
 Convenciones: Vue 3 con `<script setup>`, todo en español, sin TypeScript ni
 gestores de estado externos, para que cualquier estudiante pueda mantenerlo.
+La Edge Function es la única excepción: corre en Deno, fuera del bundle de
+Vue, pero se mantiene en JavaScript plano por consistencia con el resto.
