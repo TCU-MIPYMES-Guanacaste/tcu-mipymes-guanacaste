@@ -13,6 +13,7 @@ import { useProductores } from '@/composables/useProductores'
 import { useContactos } from '@/composables/useContactos'
 import { useToast } from '@/composables/useToast'
 import ProducerTable from '@/components/admin/ProducerTable.vue'
+import CatalogosPanel from '@/components/admin/CatalogosPanel.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 
 const router = useRouter()
@@ -90,6 +91,9 @@ async function handleDelete(id) {
         <span class="kpi-label">Contactos últimos 30 días</span>
       </div>
     </div>
+
+    <!-- Gestión de catálogos (disponible para cualquier administrador) -->
+    <CatalogosPanel />
 
     <!-- Indicador de carga -->
     <LoadingSpinner v-if="loading" message="Cargando productores..." />
