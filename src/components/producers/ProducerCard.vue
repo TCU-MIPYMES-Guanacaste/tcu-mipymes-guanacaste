@@ -12,6 +12,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { getPublicImageUrl } from '@/lib/supabase'
+import { colorDeCategoria } from '@/utils/categoriaColor'
 
 const props = defineProps({
   /** Objeto con los datos del productor */
@@ -60,12 +61,13 @@ const categoryNames = computed(() => {
         📍 {{ producer.canton.nombre }}
       </p>
 
-      <!-- Etiquetas de categorías -->
+      <!-- Etiquetas de categorías, cada una con su color propio -->
       <div v-if="categoryNames.length" class="card-tags">
         <span
           v-for="cat in categoryNames"
           :key="cat"
           class="card-tag"
+          :style="{ background: colorDeCategoria(cat).bg, color: colorDeCategoria(cat).texto }"
         >
           {{ cat }}
         </span>
@@ -78,10 +80,11 @@ const categoryNames = computed(() => {
 .producer-card {
   display: flex;
   flex-direction: column;
-  background: var(--color-white);
-  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(43, 32, 22, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
   text-decoration: none;
   color: inherit;
@@ -89,13 +92,13 @@ const categoryNames = computed(() => {
 
 .producer-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 20px rgba(43, 32, 22, 0.12);
 }
 
 .card-image {
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background-color: var(--color-surface);
+  background-color: var(--bg-muted);
 }
 
 .card-img {
@@ -111,7 +114,7 @@ const categoryNames = computed(() => {
   align-items: center;
   justify-content: center;
   font-size: 3rem;
-  background-color: var(--color-surface);
+  background-color: var(--bg-muted);
 }
 
 .card-body {
@@ -119,15 +122,16 @@ const categoryNames = computed(() => {
 }
 
 .card-title {
+  font-family: var(--font-headline);
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0 0 0.5rem;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .card-location {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   margin: 0 0 0.75rem;
 }
 
@@ -137,12 +141,11 @@ const categoryNames = computed(() => {
   gap: 0.4rem;
 }
 
+/* El fondo y el color de texto los pone colorDeCategoria() por :style. */
 .card-tag {
   font-size: 0.75rem;
   padding: 0.2rem 0.6rem;
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  border-radius: 999px;
-  font-weight: 500;
+  border-radius: var(--radius-full);
+  font-weight: 600;
 }
 </style>
