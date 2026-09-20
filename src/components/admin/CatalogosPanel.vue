@@ -176,11 +176,30 @@ function cancelarEdicion() {
                 {{ cat.nombre }}
               </span>
               <div class="catalogo-acciones">
-                <button type="button" class="btn-action btn-edit" @click="empezarEdicionCategoria(cat)">
-                  ✏️ Renombrar
+                <button
+                  type="button"
+                  class="btn-icon btn-icon-edit"
+                  aria-label="Renombrar categoría"
+                  title="Renombrar"
+                  @click="empezarEdicionCategoria(cat)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  </svg>
                 </button>
-                <button type="button" class="btn-action btn-delete" @click="borrarCategoria(cat)">
-                  🗑️ Eliminar
+                <button
+                  type="button"
+                  class="btn-icon btn-icon-delete"
+                  aria-label="Eliminar categoría"
+                  title="Eliminar"
+                  @click="borrarCategoria(cat)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                  </svg>
                 </button>
               </div>
             </template>
@@ -220,11 +239,30 @@ function cancelarEdicion() {
             <template v-else>
               <span class="catalogo-nombre">📍 {{ canton.nombre }}</span>
               <div class="catalogo-acciones">
-                <button type="button" class="btn-action btn-edit" @click="empezarEdicionCanton(canton)">
-                  ✏️ Renombrar
+                <button
+                  type="button"
+                  class="btn-icon btn-icon-edit"
+                  aria-label="Renombrar cantón"
+                  title="Renombrar"
+                  @click="empezarEdicionCanton(canton)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  </svg>
                 </button>
-                <button type="button" class="btn-action btn-delete" @click="borrarCanton(canton)">
-                  🗑️ Eliminar
+                <button
+                  type="button"
+                  class="btn-icon btn-icon-delete"
+                  aria-label="Eliminar cantón"
+                  title="Eliminar"
+                  @click="borrarCanton(canton)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                  </svg>
                 </button>
               </div>
             </template>
@@ -326,6 +364,33 @@ function cancelarEdicion() {
   gap: var(--spacing-1);
   max-height: 360px;
   overflow-y: auto;
+
+  /* Scrollbar delgado y discreto; sin flechas nativas en los extremos. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-300) transparent;
+}
+
+.catalogo-lista::-webkit-scrollbar {
+  width: 6px;
+}
+
+.catalogo-lista::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.catalogo-lista::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-300);
+  border-radius: var(--radius-full);
+}
+
+.catalogo-lista::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-400);
+}
+
+.catalogo-lista::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 .catalogo-fila {
@@ -388,13 +453,32 @@ function cancelarEdicion() {
   background-color: var(--color-neutral-200);
 }
 
-.btn-delete {
-  background-color: #fee2e2;
-  color: #991b1b;
+/* Íconos de editar/eliminar: sin fondo en reposo, solo aparece al hover. */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  background-color: transparent;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
-.btn-delete:hover {
-  background-color: #fca5a5;
+.btn-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.btn-icon-edit:hover {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-600);
+}
+
+.btn-icon-delete:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 .catalogo-vacio {

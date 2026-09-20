@@ -16,6 +16,7 @@ const AdminLayout = () => import('@/layouts/AdminLayout.vue')
 const AdminDashboardView = () => import('@/views/admin/AdminDashboardView.vue')
 const ProducerCreateView = () => import('@/views/admin/ProducerCreateView.vue')
 const ProducerEditView = () => import('@/views/admin/ProducerEditView.vue')
+const CatalogosView = () => import('@/views/admin/CatalogosView.vue')
 const AdminsView = () => import('@/views/admin/AdminsView.vue')
 
 const routes = [
@@ -72,6 +73,12 @@ const routes = [
         component: ProducerEditView,
         props: true,
         meta: { title: 'Editar Productor' },
+      },
+      {
+        path: 'categorias-cantones',
+        name: 'catalogos',
+        component: CatalogosView,
+        meta: { title: 'Categorías y Cantones' },
       },
       {
         path: 'administradores',
