@@ -119,25 +119,27 @@ async function handleDelete(id) {
 }
 
 .admin-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text);
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .btn-create {
   padding: 0.6rem 1.25rem;
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  background-color: var(--color-primary-600);
+  color: var(--text-inverse);
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: var(--radius-full);
   font-weight: 600;
   font-size: 0.9rem;
   transition: background-color 0.2s;
 }
 
 .btn-create:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-primary-700);
+  color: var(--text-inverse);
 }
 
 .error-message {
@@ -158,20 +160,27 @@ async function handleDelete(id) {
   gap: var(--spacing-1);
   padding: var(--spacing-5);
   background: var(--bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
 
+/* Los números alternan barro y verde monte para dar ritmo a la fila. */
 .kpi-value {
+  font-family: var(--font-headline);
   font-size: var(--font-size-3xl);
-  font-weight: 700;
-  color: var(--color-primary-dark);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-600);
   line-height: 1;
+}
+
+.kpi-card:nth-child(even) .kpi-value {
+  color: var(--color-warm-600);
 }
 
 .kpi-label {
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
 }
 </style>

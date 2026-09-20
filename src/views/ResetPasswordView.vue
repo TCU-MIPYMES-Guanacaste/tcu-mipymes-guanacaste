@@ -127,28 +127,29 @@ async function handleSubmit() {
   width: 100%;
   max-width: 420px;
   background: var(--bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 28px rgba(43, 32, 22, 0.08);
   padding: var(--spacing-8);
 }
 
 .reset-title {
+  font-family: var(--font-headline);
   font-size: var(--font-size-2xl);
-  font-weight: 700;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0 0 var(--spacing-2);
 }
 
 .reset-subtitle {
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   font-size: var(--font-size-sm);
   margin: 0 0 var(--spacing-6);
   line-height: 1.5;
 }
 
 .reset-error {
-  background-color: #fef2f2;
+  background-color: var(--color-error-light);
   color: var(--color-error);
   border: 1px solid #fecaca;
   border-radius: var(--radius-md);
@@ -171,32 +172,35 @@ async function handleSubmit() {
 
 .form-label {
   font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .form-input {
-  padding: 0.65rem var(--spacing-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: 0.65rem var(--spacing-4);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-size: var(--font-size-base);
   font-family: inherit;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .form-input:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-  border-color: var(--color-primary);
+  outline: none;
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 3px rgba(140, 59, 38, 0.15);
 }
 
 .reset-button {
   display: block;
   width: 100%;
   padding: 0.75rem;
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  background-color: var(--color-primary-600);
+  color: var(--text-inverse);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-size: var(--font-size-base);
   font-weight: 600;
   cursor: pointer;
@@ -206,7 +210,7 @@ async function handleSubmit() {
 }
 
 .reset-button:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-primary-700);
 }
 
 .reset-button:disabled {

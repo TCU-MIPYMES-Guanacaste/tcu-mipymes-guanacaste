@@ -4,6 +4,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { getPublicImageUrl } from '@/lib/supabase'
+import { colorDeCategoria } from '@/utils/categoriaColor'
 
 const props = defineProps({
   /** Lista de productores para la tabla */
@@ -101,13 +102,17 @@ function contactosDe(id) {
                 📍 {{ p.canton?.nombre || 'Guanacaste' }}
               </span>
             </td>
-            <!-- Categorías -->
+            <!-- Categorías, cada una con su color propio -->
             <td>
               <div class="categories-tags">
                 <span
                   v-for="cat in p.categorias"
                   :key="cat.categoria?.id"
                   class="cat-badge"
+                  :style="{
+                    background: colorDeCategoria(cat.categoria?.nombre).bg,
+                    color: colorDeCategoria(cat.categoria?.nombre).texto,
+                  }"
                 >
                   {{ cat.categoria?.nombre || 'Alimento' }}
                 </span>
@@ -162,7 +167,7 @@ function contactosDe(id) {
 <style scoped>
 .table-container-card {
   background-color: var(--bg-surface);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-neutral-200);
   overflow: hidden;
@@ -265,13 +270,12 @@ function contactosDe(id) {
   max-width: 250px;
 }
 
+/* El fondo y el color de texto los pone colorDeCategoria() por :style. */
 .cat-badge {
   font-size: var(--font-size-xs);
   padding: 2px 8px;
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-800);
   border-radius: var(--radius-full);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Estados */
@@ -282,9 +286,11 @@ function contactosDe(id) {
   font-weight: 600;
 }
 
+/* "Activo" en verde monte: el barro es el color de marca y aquí debe
+   leerse como estado bueno, no como acento. */
 .status-active {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-800);
+  background-color: var(--color-warm-100);
+  color: var(--color-warm-800);
 }
 
 .status-inactive {
@@ -314,12 +320,12 @@ function contactosDe(id) {
 }
 
 .btn-edit {
-  background-color: var(--color-warm-100);
-  color: var(--color-warm-800);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
 }
 
 .btn-edit:hover {
-  background-color: var(--color-warm-200);
+  background-color: var(--color-primary-200);
 }
 
 .btn-delete {
