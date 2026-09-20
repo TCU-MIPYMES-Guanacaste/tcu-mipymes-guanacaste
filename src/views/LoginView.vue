@@ -167,32 +167,34 @@ function volverALogin() {
 .login-card {
   width: 100%;
   max-width: 400px;
-  background: var(--color-white);
+  background: var(--bg-surface);
+  border: 1px solid var(--color-neutral-200);
   padding: 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 28px rgba(43, 32, 22, 0.08);
 }
 
 .login-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  font-weight: 600;
   margin: 0 0 0.25rem;
   text-align: center;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .login-subtitle {
   text-align: center;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin: 0 0 1.5rem;
 }
 
 .login-error {
-  background-color: var(--color-error-light, #fef2f2);
-  color: var(--color-error, #dc2626);
+  background-color: var(--color-error-light);
+  color: var(--color-error);
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin-bottom: 1rem;
   font-size: 0.9rem;
 }
@@ -204,34 +206,37 @@ function volverALogin() {
 .form-label {
   display: block;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.35rem;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 3px rgba(140, 59, 38, 0.15);
 }
 
 .login-button {
   width: 100%;
   padding: 0.85rem;
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  background-color: var(--color-primary-600);
+  color: var(--text-inverse);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-full);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -240,7 +245,7 @@ function volverALogin() {
 }
 
 .login-button:hover:not(:disabled) {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-primary-700);
 }
 
 .login-button:disabled {
@@ -252,13 +257,13 @@ function volverALogin() {
   display: block;
   text-align: center;
   margin-top: 1.5rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 0.85rem;
 }
 
 .login-back-link:hover {
-  color: var(--color-primary);
+  color: var(--color-primary-600);
 }
 
 .login-info {
@@ -278,9 +283,9 @@ function volverALogin() {
   margin-top: var(--spacing-4);
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-primary-600);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   text-align: center;
 }
