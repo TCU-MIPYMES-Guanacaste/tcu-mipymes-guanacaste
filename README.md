@@ -320,6 +320,31 @@ Su teléfono no es válido (no tiene 8 dígitos). Edítelo desde el panel.
 **El sitio muestra un mensaje de error al cargar los productores.**
 El proyecto de Supabase está pausado (sección 8) o la clave `anon` cambió.
 
+**Reactivar un administrador revocado.**
+Revocar acceso (`eliminarAdmin` o el botón "Revocar" del panel) solo borra la
+fila de `admin_profiles`; nunca elimina la cuenta de Supabase Auth. Por eso,
+si vuelve a invitar por la interfaz a ese mismo correo, la Edge Function
+responderá que el correo ya tiene una cuenta. Para reactivarlo sin crear una
+cuenta nueva, ejecute en el **SQL Editor** de Supabase:
+
+```sql
+-- 1. Buscar el UUID del usuario existente por correo
+SELECT id FROM auth.users WHERE email = 'correo@ejemplo.com';
+
+-- 2. Volver a darlo de alta en la lista blanca con ese UUID
+INSERT INTO public.admin_profiles (id, nombre_completo, rol)
+VALUES ('UUID-OBTENIDO-ARRIBA', 'Nombre Completo', 'editor');
+```
+
+**Me quedé sin ningún superadmin.**
+La migración 003 revisa esto solo al aplicarse y, si no encuentra ninguno,
+deja un `RAISE WARNING` en el log de Postgres (fácil de no ver). Si llegó a
+esa situación, reasigne el rol manualmente en el **SQL Editor**:
+
+```sql
+UPDATE public.admin_profiles SET rol = 'superadmin' WHERE id = '<uuid-del-admin>';
+```
+
 ## 10. Estructura del código
 
 ```
@@ -328,14 +353,17 @@ src/
 ├── utils/                   Funciones puras, sin Supabase, con pruebas
 │   ├── telefono.js          Normalizar/validar/formatear teléfonos de CR
 │   ├── whatsapp.js          Enlace wa.me con mensaje predefinido
-│   └── busqueda.js          Limpieza del texto de búsqueda
+│   ├── busqueda.js          Limpieza del texto de búsqueda
+│   └── precio.js            Formato de precios de referencia en colones
 ├── composables/             Estado reactivo + una responsabilidad cada uno
 │   ├── useAuth.js           Sesión, login, logout, recuperar contraseña
 │   ├── useProductores.js    CRUD de productores (usa useStorage para fotos)
+│   ├── useProductosDestacados.js  CRUD de productos destacados de un productor
 │   ├── useStorage.js        Subir/eliminar imágenes del bucket
 │   ├── useCatalogos.js      Cantones y categorías
 │   ├── useContactos.js      Métrica de contactos por WhatsApp
 │   ├── useAdmins.js         Listar, invitar y revocar administradores (solo superadmin)
+│   ├── usePaginacion.js     Paginación en el cliente para listas ya cargadas
 │   └── useToast.js          Notificaciones de éxito/error
 ├── router/
 │   ├── index.js             Rutas (públicas, login, /admin con hijos)
@@ -347,6 +375,7 @@ src/
 database/
 ├── migrations/001_...sql    Tablas, índices y RLS iniciales
 ├── migrations/002_...sql    Lista blanca de admins, contactos, Storage
+├── migrations/003_...sql    Roles diferenciados y cierre de escalada de privilegios
 └── seeds/001_...sql         Cantones y categorías iniciales
 
 supabase/
