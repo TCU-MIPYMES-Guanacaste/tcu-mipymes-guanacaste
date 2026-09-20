@@ -88,19 +88,19 @@ export function useCatalogos() {
   }
 
   /**
-   * Crea una categoría.
+   * Crea una categoría. El ícono no se personaliza por categoría: la
+   * interfaz siempre muestra uno estándar para "alimentos" (🌾).
    * @param {string} nombre
-   * @param {string} [icono] - Emoji opcional
    * @returns {Promise<Object|null>}
    */
-  function crearCategoria(nombre, icono = '') {
+  function crearCategoria(nombre) {
     return ejecutar(async () => {
       const limpio = (nombre ?? '').trim()
       if (!limpio) throw new Error('El nombre de la categoría es obligatorio.')
 
       const { data, error: insertError } = await supabase
         .from('categorias')
-        .insert({ nombre: limpio, icono: (icono ?? '').trim() || null })
+        .insert({ nombre: limpio, icono: null })
         .select('id, nombre, icono')
         .single()
       if (insertError) throw insertError
