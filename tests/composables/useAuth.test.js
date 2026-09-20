@@ -82,4 +82,66 @@ describe('useAuth', () => {
     await expect(updatePassword('123')).rejects.toBeTruthy()
     expect(error.value).toBe('La contraseña debe tener al menos 8 caracteres.')
   })
+
+  describe('rol de administrador', () => {
+    it('login carga el rol y esSuperadmin es true para un superadmin', async () => {
+      mockRef.actual.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: usuario, session: {} },
+        error: null,
+      })
+      mockRef.actual.responder('admin_profiles', { data: { rol: 'superadmin' }, error: null })
+
+      const { login, adminRol, esSuperadmin } = useAuth()
+      await login('admin@ucr.ac.cr', 'secreto')
+
+      const [consulta] = mockRef.actual.consultasDe('admin_profiles')
+      expect(consulta.eq).toHaveBeenCalledWith('id', 'u-1')
+      expect(adminRol.value).toBe('superadmin')
+      expect(esSuperadmin.value).toBe(true)
+    })
+
+    it('un editor deja esSuperadmin en false', async () => {
+      mockRef.actual.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: usuario, session: {} },
+        error: null,
+      })
+      mockRef.actual.responder('admin_profiles', { data: { rol: 'editor' }, error: null })
+
+      const { login, adminRol, esSuperadmin } = useAuth()
+      await login('editor@ucr.ac.cr', 'secreto')
+
+      expect(adminRol.value).toBe('editor')
+      expect(esSuperadmin.value).toBe(false)
+    })
+
+    it('si la consulta del rol falla, adminRol queda en null sin lanzar', async () => {
+      mockRef.actual.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: usuario, session: {} },
+        error: null,
+      })
+      mockRef.actual.responder('admin_profiles', { data: null, error: { message: 'denegado' } })
+
+      const { login, adminRol, esSuperadmin, currentUser } = useAuth()
+      await expect(login('admin@ucr.ac.cr', 'secreto')).resolves.toBeTruthy()
+
+      expect(currentUser.value).toEqual(usuario)
+      expect(adminRol.value).toBeNull()
+      expect(esSuperadmin.value).toBe(false)
+    })
+
+    it('logout limpia el rol', async () => {
+      mockRef.actual.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: usuario, session: {} },
+        error: null,
+      })
+      mockRef.actual.responder('admin_profiles', { data: { rol: 'superadmin' }, error: null })
+
+      const { login, logout, adminRol } = useAuth()
+      await login('admin@ucr.ac.cr', 'secreto')
+      expect(adminRol.value).toBe('superadmin')
+
+      await logout()
+      expect(adminRol.value).toBeNull()
+    })
+  })
 })
