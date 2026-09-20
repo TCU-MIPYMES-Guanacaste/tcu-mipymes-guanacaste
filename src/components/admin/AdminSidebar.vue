@@ -5,6 +5,7 @@
   - Dashboard / Resumen
   - Listado de productores
   - Crear nuevo productor
+  - Categorías y cantones
   - Administradores (solo superadmin)
 -->
 <script setup>
@@ -31,6 +32,14 @@ const { esSuperadmin } = useAuth()
         active-class="sidebar-link--active"
       >
         ➕ Nuevo Productor
+      </RouterLink>
+
+      <RouterLink
+        to="/admin/categorias-cantones"
+        class="sidebar-link"
+        active-class="sidebar-link--active"
+      >
+        🏷️ Categorías y Cantones
       </RouterLink>
 
       <RouterLink
