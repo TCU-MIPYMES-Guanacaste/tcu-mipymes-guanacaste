@@ -84,7 +84,7 @@ Si el proyecto de Supabase ya estaba funcionando con la Fase 1:
    Deben quedar únicamente las cuatro que empiezan por `imagenes_`. Elimine
    cualquier otra desde Storage → Policies o con
    `DROP POLICY "nombre" ON storage.objects;`.
-3. Complete los pasos 7, 8 y la sección 3 (crear el administrador).
+3. Complete los pasos 8, 9 y la sección 3 (crear el administrador).
 
 > **Orden importante:** ejecute la migración 002 **antes** de fusionar el código
 > nuevo a la rama `main`, porque cada `push` a `main` publica el sitio
@@ -135,7 +135,7 @@ cd tcu-mipymes-guanacaste
 npm install
 ```
 
-Copie `.env.example` a `.env` y complete con los valores del paso 2.9:
+Copie `.env.example` a `.env` y complete con los valores del paso 2.10:
 
 ```
 VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
@@ -167,7 +167,7 @@ Otros comandos:
 4. **Deploy**. En 1-2 minutos tendrá una URL `https://....vercel.app`.
 5. Vuelva a Supabase → **Authentication → URL Configuration** y ponga esa URL
    como **Site URL** y agregue `https://....vercel.app/restablecer-contrasena`
-   a **Redirect URLs** (paso 2.8).
+   a **Redirect URLs** (paso 2.9).
 
 Cada `git push` a la rama `main` vuelve a publicar automáticamente.
 
@@ -254,7 +254,7 @@ El usuario no está en `admin_profiles`. Ver sección 3.
 
 **No llega el correo de recuperación.**
 1. Revise spam. 2. Espere: el límite es 2-4 correos por hora. 3. Verifique que
-la URL del sitio esté en **Redirect URLs** (sección 2.8).
+la URL del sitio esté en **Redirect URLs** (sección 2.9).
 
 **Al hacer clic en el enlace del correo dice "Enlace inválido o expirado".**
 El enlace dura 1 hora y sirve una sola vez. Pida uno nuevo. Si vuelve a fallar,
