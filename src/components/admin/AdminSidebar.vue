@@ -111,4 +111,39 @@ const { esSuperadmin } = useAuth()
   background-color: var(--color-neutral-200);
   margin: 1rem 0;
 }
+
+/* La barra nunca tuvo tratamiento para pantallas angostas: quedaba con
+   sus 240px fijos aunque AdminLayout ya la pasara a una fila propia
+   arriba del contenido. Se vuelve una fila de enlaces que se acomodan
+   solos, en vez de una columna angosta con espacio vacío al lado. */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-neutral-200);
+    padding: 1rem;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .sidebar-title {
+    width: 100%;
+    margin: 0 0 0.25rem;
+  }
+
+  .sidebar-link {
+    display: inline-block;
+    margin-bottom: 0;
+  }
+
+  .sidebar-divider {
+    display: none;
+  }
+}
 </style>

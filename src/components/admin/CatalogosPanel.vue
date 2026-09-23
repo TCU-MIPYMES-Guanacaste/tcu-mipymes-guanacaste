@@ -333,6 +333,8 @@ function cancelarEdicion() {
 }
 
 .catalogo-alta input {
+  flex: 1;
+  min-width: 0;
   padding: var(--spacing-2) var(--spacing-3);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-md);

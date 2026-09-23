@@ -159,4 +159,37 @@ async function handleLogout() {
   border-color: rgba(255, 255, 255, 0.8);
   background-color: rgba(255, 255, 255, 0.15) !important;
 }
+
+/* Pantallas angostas: el encabezado nunca tuvo tratamiento propio y el
+   nombre + subtítulo se partían en varias líneas, empujando la navegación
+   fuera de lugar. Se oculta el subtítulo y se permite que el contenedor
+   pase a dos filas en vez de apretujar todo en una. */
+@media (max-width: 640px) {
+  .app-header {
+    padding: 0.65rem 1rem;
+  }
+
+  .header-container {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  .brand-name {
+    font-size: 1.05rem;
+    white-space: nowrap;
+  }
+
+  .header-nav {
+    gap: 0.4rem;
+  }
+
+  .nav-link {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+  }
+}
 </style>
