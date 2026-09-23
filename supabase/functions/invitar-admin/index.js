@@ -39,8 +39,9 @@ Deno.serve(async (req) => {
   try {
     const url = Deno.env.get('SUPABASE_URL')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const sitioUrl = Deno.env.get('SITE_URL')
 
-    if (!url || !serviceRoleKey) {
+    if (!url || !serviceRoleKey || !sitioUrl) {
       return responder({ error: 'La función no está configurada correctamente.' }, 500)
     }
 
@@ -95,8 +96,15 @@ Deno.serve(async (req) => {
     }
 
     // --- 4. Crear la cuenta y enviar la invitación ---
+    // redirectTo obligatorio: sin esto, Supabase manda a la Site URL por
+    // defecto (la raíz "/"), y como la app detecta cualquier sesión que
+    // llegue en la URL, el invitado queda logueado sin haber definido
+    // nunca una contraseña. Mandarlo a /restablecer-contrasena reutiliza
+    // esa misma pantalla para que la cree antes de entrar al panel.
     const { data: invitacion, error: errorInvitacion } =
-      await admin.auth.admin.inviteUserByEmail(email)
+      await admin.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${sitioUrl}/restablecer-contrasena`,
+      })
 
     if (errorInvitacion || !invitacion?.user) {
       const mensaje = (errorInvitacion?.message ?? '').toLowerCase()
