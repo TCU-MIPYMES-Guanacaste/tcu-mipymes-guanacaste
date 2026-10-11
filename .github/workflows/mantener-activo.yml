@@ -1,0 +1,50 @@
+# Mantiene activo el proyecto de Supabase.
+#
+# El plan gratuito pausa el proyecto tras 7 días sin actividad. Este flujo hace
+# una consulta mínima a la API (leer 1 fila de "categorias") dos veces por
+# semana, así nunca se llega a ese límite.
+#
+# Necesita dos secretos en GitHub (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL        https://SU-PROYECTO.supabase.co
+#   SUPABASE_ANON_KEY   la clave anon/publishable (la misma de VITE_SUPABASE_ANON_KEY)
+#
+# Si la consulta falla (por ejemplo, el proyecto ya está pausado), el flujo
+# termina en error y GitHub avisa por correo a quien administra el repositorio.
+name: Mantener Supabase activo
+
+on:
+  schedule:
+    # Lunes y jueves, 14:00 UTC (8:00 a. m. en Costa Rica).
+    - cron: '0 14 * * 1,4'
+  # Permite correrlo a mano desde la pestaña Actions.
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  consulta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consultar la API de Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -eu
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::Faltan los secretos SUPABASE_URL y/o SUPABASE_ANON_KEY (ver README, sección 8.1)."
+            exit 1
+          fi
+
+          estado=$(curl --silent --show-error --max-time 30 \
+            --output /dev/null --write-out '%{http_code}' \
+            --header "apikey: ${SUPABASE_ANON_KEY}" \
+            --header "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL%/}/rest/v1/categorias?select=id&limit=1")
+
+          echo "Respuesta de Supabase: HTTP ${estado}"
+          if [ "${estado}" != "200" ]; then
+            echo "::error::La consulta falló (HTTP ${estado}). Revise si el proyecto está pausado en supabase.com."
+            exit 1
+          fi

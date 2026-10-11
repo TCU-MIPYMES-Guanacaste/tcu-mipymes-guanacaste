@@ -157,9 +157,21 @@ npx supabase functions deploy invitar-admin
 ```
 
 Debe repetirse **solo** si cambia el archivo
-`supabase/functions/invitar-admin/index.js`. No hace falta configurar ninguna
-clave: Supabase inyecta `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` dentro de
-la función, y esa clave nunca llega al navegador.
+`supabase/functions/invitar-admin/index.js`. Supabase inyecta `SUPABASE_URL` y
+`SUPABASE_SERVICE_ROLE_KEY` dentro de la función, y esa clave nunca llega al
+navegador.
+
+La función necesita además **un secreto propio**, que se crea una sola vez en
+**Edge Functions → Secrets** (o con `npx supabase secrets set SITE_URL=...`):
+
+| Secreto | Valor | Para qué sirve |
+|---|---|---|
+| `SITE_URL` | La dirección pública del sitio, sin barra final (por ejemplo `https://tcu-mipymes-guanacaste.vercel.app`) | El correo de invitación lleva a `SITE_URL/restablecer-contrasena`, donde la persona elige su contraseña |
+
+Sin este secreto la función responde "La función no está configurada
+correctamente." y no envía invitaciones. Si cambia el dominio del sitio,
+actualice también el secreto y agregue la nueva dirección en **Authentication →
+URL Configuration → Redirect URLs**.
 
 ### 4.3 Qué hace y qué no
 
@@ -171,11 +183,10 @@ la función, y esa clave nunca llega al navegador.
   pierde todo permiso, pero **no** elimina su cuenta de Supabase Auth. Si
   quiere borrarla del todo: **Authentication → Users → Delete user**.
 
-> **Estado de este despliegue:** el código de la función y su configuración
-> (`supabase/functions/invitar-admin/index.js`, `supabase/config.toml`) ya
-> están en el repositorio, pero el despliegue (4.2) y la configuración de SMTP
-> (4.1) son pasos manuales contra el proyecto real de Supabase que quedan
-> pendientes de ejecutar.
+> **Estado de este despliegue:** la función `invitar-admin` está desplegada en
+> el proyecto real de Supabase y el secreto `SITE_URL` ya está configurado. Pendiente
+> a propósito: el SMTP propio (4.1); mientras tanto se usa el servidor de prueba
+> de Supabase, con su límite de pocos correos por hora.
 
 ## 5. Ejecutar en la computadora
 
@@ -286,11 +297,38 @@ password**.
 | Base de datos | 500 MB | Miles de productores; sin riesgo real |
 | Storage | 1 GB | Las fotos se comprimen a ~100-200 KB → ~5.000 fotos |
 | Correos de Auth | 2-4 por hora | Suficiente para recuperar contraseñas; no para envíos masivos |
-| Inactividad | 7 días sin uso pausa el proyecto | Entrar a `supabase.com` y **Restore** lo reactiva en 1-2 min |
+| Inactividad | 7 días sin uso pausa el proyecto | Lo evita el flujo de la sección 8.1; si se pausa, **Restore** en `supabase.com` lo reactiva en 1-2 min |
 | Vercel | 100 GB de transferencia/mes | Muy por encima del tráfico esperado |
 
 Si el proyecto se pausa por inactividad, el sitio muestra un error de conexión
 hasta que alguien lo restaure desde el panel de Supabase.
+
+### 8.1 Evitar la pausa por inactividad
+
+El repositorio incluye el flujo `.github/workflows/mantener-activo.yml`, que
+cada **lunes y jueves** (8:00 a. m. hora de Costa Rica) consulta la API de
+Supabase para que el proyecto nunca pase 7 días sin actividad. Se configura una
+sola vez:
+
+1. En GitHub, en el repositorio: **Settings → Secrets and variables → Actions →
+   New repository secret**.
+2. Crear `SUPABASE_URL` (por ejemplo `https://xxxx.supabase.co`) y
+   `SUPABASE_ANON_KEY` (la clave anon/publishable; es la misma de
+   `VITE_SUPABASE_ANON_KEY`).
+3. Probarlo: pestaña **Actions → Mantener Supabase activo → Run workflow**. Debe
+   terminar en verde con "Respuesta de Supabase: HTTP 200".
+
+Cosas que conviene saber:
+
+- Si la consulta falla (proyecto pausado, secretos mal escritos), el flujo
+  termina en rojo y GitHub avisa por correo a quien administra el repositorio.
+- GitHub **desactiva los flujos programados** de un repositorio público tras
+  60 días sin actividad (commits). Si pasa, aparece un aviso en la pestaña
+  Actions y se reactiva con un clic en **Enable workflow**.
+- Si el repositorio se transfiere a otra organización, los secretos no se
+  copian: hay que volver a crearlos.
+- Un proyecto ya pausado **no** se reactiva solo: hay que usar **Restore** en
+  `supabase.com` (los datos se conservan unos 90 días).
 
 ## 9. Problemas frecuentes
 
