@@ -191,7 +191,7 @@ URL Configuration → Redirect URLs**.
 ## 5. Ejecutar en la computadora
 
 ```bash
-git clone https://github.com/HeinnerV/tcu-mipymes-guanacaste.git
+git clone https://github.com/tcu-mipymes-guanacaste/tcu-mipymes-guanacaste.git
 cd tcu-mipymes-guanacaste
 npm install
 ```

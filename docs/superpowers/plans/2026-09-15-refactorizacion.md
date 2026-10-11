@@ -4420,7 +4420,7 @@ Para cada administrador adicional, repita los pasos 1-3 con `rol = 'editor'`.
 ## 4. Ejecutar en la computadora
 
 ```bash
-git clone https://github.com/HeinnerV/tcu-mipymes-guanacaste.git
+git clone https://github.com/tcu-mipymes-guanacaste/tcu-mipymes-guanacaste.git
 cd tcu-mipymes-guanacaste
 npm install
 ```
